@@ -1,0 +1,37 @@
+{% load static %}
+<div class="row">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="input-group mt-3 mb-3">
+            <input type="text" class="form-control " placeholder="Фильтр..." ng-model="filter">
+            <button class="btn btn-outline-secondary" type="button" ng-click="filter = ''">Очистить</button>
+        </div>
+    </div>
+</div>
+<div ng-repeat="(groupName, group) in grouped_models">
+    <div class="row">
+        <div class="col">
+            <h2>{% verbatim %}{{ groupName }}{% endverbatim %}</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4" ng-repeat="model in group">
+            <div class="card mb-3 bg-light">
+                <div class="row g-0">
+                    <div class="col-4 p-3">
+                        <img src="{{ STATIC_URL }}{% verbatim %}{{ model.icon_path }}{% endverbatim %}" class="img-fluid rounded-start" alt="...">
+                    </div>
+                    <div class="col-8">
+                        <div class="card-body">
+                            <h5 class="card-title">{% verbatim %}{{ model.verbose_name }}{% endverbatim %}</h5>
+                            <p class="card-text">{% verbatim %}{{ model.description }}{% endverbatim %}</p>
+                            <div class="d-grid">
+                                <button class="btn btn-outline-secondary" type="button" >Перейти</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
