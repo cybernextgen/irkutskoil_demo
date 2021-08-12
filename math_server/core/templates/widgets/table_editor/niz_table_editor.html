@@ -1,0 +1,40 @@
+{% verbatim %}
+<button type="button" class="form-control btn btn-outline-secondary" ng-click="showModal()">Редактировать</button>
+<!--<button id="directive_{{ $id }}" type="button" data-bs-toggle="modal" data-bs-target="#modal_{{ $id }}" class="form-control btn btn-outline-secondary">Редактировать</button>-->
+<div class="modal fade" id="modal_{{ $id }}" tabindex="-1" aria-labelledby="modal_label_{{ $id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_label_{{ $id }}">Редактирование таблицы "Отбор от НИЗ / Обводнённость"</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="readFromClipboard()">Вставить из буфера</button>
+                <!--<button type="button" class="btn btn-sm btn-outline-secondary">Вставить из xlsx</button>-->
+                <div class="mt-2">
+                    <table ng-if="niz_table_temp.length" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Отбор от НИЗ, м<sup>3</sup></th>
+                            <th>Обводнённость</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="row in niz_table_temp">
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>{{ row[2] }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" ng-click="closeModal()">Отмена</button>
+                <button type="button" class="btn btn-primary" ng-click="save()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endverbatim %}

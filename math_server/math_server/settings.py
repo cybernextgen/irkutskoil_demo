@@ -150,3 +150,7 @@ MATH_MODELS_AVAILABLE = {
         'core.models.AsyncCalculatorModel'
     ]
 }
+
+LOGIN_URL = 'login/'
+LOGOUT_URL = 'logout/'
+LOGOUT_REDIRECT_URL = '/'

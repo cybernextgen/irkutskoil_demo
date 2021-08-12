@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+{% load static compress %}
+
+{% block 'css' %}
+
+{% endblock %}
+
+{% block 'content' %}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#"><img src="{% static 'core/img/logo.png' %}" height="30"> Сервер математических моделей</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="me-auto">
+            </div>
+            <a class="btn btn-outline-secondary" href="{% url 'logout' %}">Выйти</a>
+        </div>
+      </div>
+    </nav>
+    <div class="container" ui-view>
+
+    </div>
+
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}" charset="utf-8"></script>
+    <script type="text/javascript" src="{% static 'angular/angular.min.js' %}" charset="utf-8"></script>
+    <script type="text/javascript" src="{% static '@uirouter/angularjs/release/angular-ui-router.min.js' %}" charset="utf-8"></script>
+    <script type="text/javascript" src="{% static 'core/js/core.js' %}" charset="utf-8"></script>
+    {% endcompress %}
+    <script>
+        window.csrf_token = "{{ csrf_token }}";
+    </script>
+{% endblock %}

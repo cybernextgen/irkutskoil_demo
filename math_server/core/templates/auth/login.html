@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+
+{% block 'content' %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-10 col-sm-8 col-md-6 col-xxl-4">
+            <div class="card">
+                <div class="card-header">
+                    ИНК: Сервер математических моделей
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <p class="text-danger">Введены неверные имя пользователя или пароль. Попробуйте снова.</p>
+                    {% endif %}
+                    <form method="post" action="{% url 'login' %}">
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Имя пользователя</label>
+                            <input class="form-control" type="text" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username">
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Пароль</label>
+                            <input type="password" class="form-control" name="password" autocomplete="current-password" required id="id_password">
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary">Войти</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

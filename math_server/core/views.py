@@ -1,12 +1,30 @@
 from django.shortcuts import render
 import logging
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
 from django.conf import settings
 from django.utils.module_loading import import_string
 from django.views import View
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 logger = logging.getLogger(__name__)
+
+
+def dict_from_model_class(model_class):
+    return {
+        'verbose_name': model_class._meta.verbose_name,
+        'id': model_class.__name__.lower(),
+        'description': model_class.get_description(),
+        'icon_path': model_class.get_icon_path()
+    }
+
+
+def dict_from_model_instance(model_instance):
+    res = dict_from_model_class(type(model_instance))
+    res['input_data'] = model_instance.input_data
+    res['output_data'] = model_instance.output_data
+    return res
 
 
 grouped_models_dict = {}
@@ -19,12 +37,7 @@ for key, classes_list in settings.MATH_MODELS_AVAILABLE.items():
             if key not in grouped_models_dict:
                 grouped_models_dict[key] = []
 
-            res = {
-                'verbose_name': cls._meta.verbose_name,
-                'id': cls.__name__.lower(),
-                'description': cls.get_description(),
-                'icon_path': cls.get_icon_path()
-            }
+            res = dict_from_model_class(cls)
             grouped_models_dict[key].append(res)
             models_classes_dict[res['id']] = cls
         except ImportError:
@@ -32,15 +45,22 @@ for key, classes_list in settings.MATH_MODELS_AVAILABLE.items():
                 'Unable to load class "{}" defined in settings.MATH_MODELS_AVAILABLE'.format(class_path))
 
 
-class MathModelAPIView(View):
+class LoginRequiredTemplateView(LoginRequiredMixin, TemplateView):
+    pass
+
+
+class MathModelAPIView(LoginRequiredMixin, View):
     """
     REST JSON API for MathModel
     """
-
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         requested_model_id = kwargs.get('model_id')
         if not requested_model_id:
             return JsonResponse(grouped_models_dict, json_dumps_params={'ensure_ascii': False})
         else:
-            pass
-        return HttpResponse()
+            cls = models_classes_dict.get(requested_model_id)
+            if not cls:
+                return HttpResponseNotFound()
+
+            model_instance, created_flag = cls.objects.get_or_create(user=request.user)
+            return JsonResponse(dict_from_model_instance(model_instance), json_dumps_params={'ensure_ascii': False})
