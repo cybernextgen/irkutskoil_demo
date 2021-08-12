@@ -27,14 +27,14 @@
         }])
 
     math_server.factory('excelClipboardParser', function() {
-        return function(text) {
-            return new Promise(function(resolve, reject) {
+        return text => {
+            return new Promise((resolve, reject) => {
                 if (!text) reject('Буфер обмена пуст')
                 text = text.replace(/\r/g, '').trim('\n')
                 let rowsOfText = text.split('\n')
                 let header = []
                 let rows = []
-                rowsOfText.forEach(function (rowAsText) {
+                rowsOfText.forEach(rowAsText => {
                     let row = rowAsText.split('\t').map(function (colAsText) {
                         return colAsText.trim().replace(/^"(.*)"$/, '$1')
                     })
@@ -60,7 +60,7 @@
             controller: function ($scope, excelClipboardParser) {
                 let modalInstance = undefined
 
-                $scope.showModal = function() {
+                $scope.showModal = function(){
                     $scope.niz_table_temp = angular.copy($scope.table) || []
                     modalInstance = new bootstrap.Modal(document.getElementById(`modal_${ $scope.$id }`), {})
                     modalInstance.show()
@@ -75,7 +75,7 @@
                     modalInstance.hide()
                 }
 
-                $scope.readFromClipboard = function() {
+                $scope.readFromClipboard = function(){
                     navigator.clipboard.readText().then(text => {
                         excelClipboardParser(text).then(text => {
                             $scope.niz_table_temp = text
@@ -83,8 +83,108 @@
                         })
                     })
                 }
+
+                $scope.clear = function(){
+                    $scope.niz_table_temp = []
+                }
             },
             templateUrl: 'templates/widgets/table_editor/niz_table_editor.html'
+        }
+    })
+
+    math_server.directive('referentModelTableEditor', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                referentModels: '='
+            },
+            transclude: true,
+            controller: function ($scope, excelClipboardParser) {
+                let modalInstance = undefined
+                let deleteDialog = undefined
+
+                $scope.selectedModelNum = undefined
+                $scope.selectedModel = {name: '', table: []}
+
+                $scope.editModel = function(model_num){
+                    if(model_num >= 0 && model_num < $scope.referentModels.length){
+                        $scope.selectedModelNum = model_num
+                        $scope.selectedModel = angular.copy($scope.referentModels[model_num])
+                    }else{
+                        $scope.selectedModelNum = undefined
+                        $scope.selectedModel = {name: '', table: []}
+                    }
+                    modalInstance = new bootstrap.Modal(document.getElementById(`modal_${ $scope.$id }`), {})
+                    modalInstance.show()
+                }
+
+                $scope.closeModal = function(){
+                    modalInstance.hide()
+                }
+
+                $scope.save = function(){
+                    if($scope.selectedModelNum === undefined){
+                        if(!$scope.referentModels) $scope.referentModels = []
+                        $scope.referentModels.push($scope.selectedModel)
+                    }else{
+                        $scope.referentModels[$scope.selectedModelNum] = $scope.selectedModel
+                    }
+                    modalInstance.hide()
+                }
+
+                $scope.readFromClipboard = function(){
+                    navigator.clipboard.readText().then(text => {
+                        excelClipboardParser(text).then(text => {
+                            $scope.selectedModel.table = text
+                            $scope.$apply()
+                        })
+                    })
+                }
+
+                $scope.showDeleteDialog = function(model_num) {
+                    if(model_num >= 0 && model_num < $scope.referentModels.length){
+                        $scope.selectedModelNum = model_num
+                        $scope.selectedModel = $scope.referentModels[model_num]
+                    }else{
+                        return
+                    }
+
+                    deleteDialog = new bootstrap.Modal(document.getElementById(`delete_dialog_${ $scope.$id }`), {})
+                    deleteDialog.show()
+                }
+
+                $scope.deleteModel = function(){
+                    $scope.referentModels.splice($scope.selectedModelNum, 1)
+                    deleteDialog.hide()
+                }
+
+                $scope.clear = function(){
+                    $scope.selectedModel.table = []
+                }
+            },
+            templateUrl: 'templates/widgets/table_editor/referent_table_editor.html'
+        }
+    })
+
+    math_server.directive('confirmationDialog', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                callback: '='
+            },
+            transclude: true,
+            controller: function ($scope) {
+                let modalInstance = undefined
+                $scope.showModal = function(){
+                    modalInstance = new bootstrap.Modal(document.getElementById(`modal_${ $scope.$id }`), {})
+                    modalInstance.show()
+                }
+
+                $scope.closeModal = function(){
+                    modalInstance.hide()
+                }
+            },
+
         }
     })
 
@@ -92,10 +192,11 @@
         $scope.grouped_models = {}
         $scope.filtred_models = {}
         $scope.search = ''
+        $scope.isProcessing = false
 
-        $scope.$watch('search', function (newValue) {
+        $scope.$watch('search',  newValue => {
             $scope.filtred_models = {}
-            angular.forEach($scope.grouped_models, function (value, key) {
+            angular.forEach($scope.grouped_models, (value, key) => {
                 let a = $filter('filter')(value, $scope.search)
 
                 if(a.length > 0){
@@ -105,10 +206,10 @@
         })
 
         $scope.loadModels = function () {
-            $http.get('/api/math_model').then(function(response) {
+            $http.get('/api/math_model').then(response => {
                 $scope.grouped_models = response.data
                 $scope.filtred_models = $scope.grouped_models
-            }, function(rejection) {})
+            }, rejection => {})
         }
 
         $scope.isEmptyObject = function(obj) {
@@ -119,21 +220,35 @@
     })
 
     math_server.controller('wellproductionmodelController', function($scope, $http) {
-        $http.get('/api/math_model/wellproductionmodel').then(function(response){
-            $scope.model_instance = response.data
-            if(!$scope.model_instance.input_data){
-                $scope.model_instance.input_data = {
+        $http.get('/api/math_model/wellproductionmodel').then(response => {
+            $scope.modelInstance = response.data
+            if(!$scope.modelInstance.input_data){
+                $scope.modelInstance.input_data = {
                     niz_table: [],
                     kin: 0,
-                    total: 0
+                    total: 0,
+                    referent_models: []
                 }
             }
         })
 
         let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        let tooltipList = tooltipTriggerList.map(tooltipTriggerEl => {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
+
+        $scope.calculate = function(){
+            $scope.isProcessing = true
+
+            $http.put('/api/math_model/wellproductionmodel', $scope.modelInstance.input_data, {headers: {'Content-Type': 'application/json', 'charset': 'utf-8'}}).then(
+                data => {
+                    console.log(data)
+                }, rejection => {
+                    console.log(rejection)
+                }).finally(()=>{
+                $scope.isProcessing = false
+            })
+        }
 
     })
 })(angular, bootstrap)

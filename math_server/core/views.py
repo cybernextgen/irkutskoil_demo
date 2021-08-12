@@ -1,11 +1,14 @@
 from django.shortcuts import render
 import logging
+import json
 from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
 from django.conf import settings
 from django.utils.module_loading import import_string
 from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+import time
 
 
 logger = logging.getLogger(__name__)
@@ -49,6 +52,12 @@ class LoginRequiredTemplateView(LoginRequiredMixin, TemplateView):
     pass
 
 
+class UnicodeJsonResponse(JsonResponse):
+
+    def __init__(self, *args, **kwargs):
+        super(UnicodeJsonResponse, self).__init__(*args, json_dumps_params={'ensure_ascii': False}, **kwargs)
+
+
 class MathModelAPIView(LoginRequiredMixin, View):
     """
     REST JSON API for MathModel
@@ -56,11 +65,28 @@ class MathModelAPIView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         requested_model_id = kwargs.get('model_id')
         if not requested_model_id:
-            return JsonResponse(grouped_models_dict, json_dumps_params={'ensure_ascii': False})
+            return UnicodeJsonResponse(grouped_models_dict)
         else:
             cls = models_classes_dict.get(requested_model_id)
             if not cls:
                 return HttpResponseNotFound()
 
             model_instance, created_flag = cls.objects.get_or_create(user=request.user)
-            return JsonResponse(dict_from_model_instance(model_instance), json_dumps_params={'ensure_ascii': False})
+            # return JsonResponse(dict_from_model_instance(model_instance), json_dumps_params={'ensure_ascii': False})
+            return UnicodeJsonResponse(dict_from_model_instance(model_instance))
+
+    def put(self, request, *args, **kwargs):
+        requested_model_id = kwargs.get('model_id')
+        cls = models_classes_dict.get(requested_model_id)
+        if not cls:
+            return HttpResponseNotFound()
+
+        request_data = json.loads(request.body.decode("utf-8"))
+
+        model_instance = get_object_or_404(cls, user=request.user)
+        model_instance.input_data = request_data
+        model_instance.calculate()
+        model_instance.save()
+        # time.sleep(10)
+
+        return UnicodeJsonResponse(dict_from_model_instance(model_instance))

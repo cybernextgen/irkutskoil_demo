@@ -1,0 +1,74 @@
+{% verbatim %}
+<div class="row mb-3 align-items-center" ng-repeat="model in referentModels">
+    <div class="col-6">
+        <span>{{ model.name }}</span>
+    </div>
+    <div class="col-6">
+        <div class="text-end">
+            <div class="btn-group" role="group">
+                <button class="form-control btn btn-outline-secondary btn-sm" ng-click="editModel($index)">Редактировать</button>
+                <button class="form-control btn btn-danger btn-sm" ng-click="showDeleteDialog($index)">Удалить</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<button class="form-control btn btn-outline-secondary" ng-click="editModel()" ng-disabled="referentModels.length >= 3">Добавить модель</button>
+
+<div class="modal fade" id="modal_{{ $id }}" tabindex="-1" aria-labelledby="modal_label_{{ $id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal_label_{{ $id }}">Редактирование референтной модели</h5>
+                <button type="button" class="btn-close" ng-click="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="model_name_{{ $id }}" class="form-label">Название модели</label>
+                    <input type="text" class="form-control" id="model_name_{{ $id }}" ng-model="selectedModel.name">
+                </div>
+                <h5>Таблица "Дебит нефти"</h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="readFromClipboard()">Вставить из буфера</button>
+                <button type="button" class="btn  btn-sm btn-danger" ng-click="clear()" ng-disabled="!selectedModel.table.length">Очистить</button>
+                <!--<button type="button" class="btn btn-sm btn-outline-secondary">Вставить из xlsx</button>-->
+                <div class="mt-2">
+                    <table ng-if="selectedModel.table.length" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Дебит нефти, ст.м<sup>3</sup>/сут</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="row in selectedModel.table">
+                            <td>{{ row[0] }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" ng-click="closeModal()">Отмена</button>
+                <button type="button" class="btn btn-primary" ng-click="save()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="delete_dialog_{{ $id }}" tabindex="-1" aria-labelledby="delete_dialog_label_{{ $id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="delete_dialog_label_{{ $id }}">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Удалить референтную модель <strong>"{{ selectedModel.name }}"</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-click="deleteModel()">Удалить</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endverbatim %}
