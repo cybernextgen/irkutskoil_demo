@@ -8,7 +8,8 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-import time
+from datetime import datetime, date
+from .models import CustomDatetimeJSONEncoder
 
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ class LoginRequiredTemplateView(LoginRequiredMixin, TemplateView):
 class UnicodeJsonResponse(JsonResponse):
 
     def __init__(self, *args, **kwargs):
+        # super(UnicodeJsonResponse, self).__init__(*args, encoder=CustomDatetimeJSONEncoder, json_dumps_params={'ensure_ascii': False}, **kwargs)
         super(UnicodeJsonResponse, self).__init__(*args, json_dumps_params={'ensure_ascii': False}, **kwargs)
 
 
@@ -87,6 +89,6 @@ class MathModelAPIView(LoginRequiredMixin, View):
         model_instance.input_data = request_data
         model_instance.calculate()
         model_instance.save()
+        res = model_instance.output_data
         # time.sleep(10)
-
-        return UnicodeJsonResponse(dict_from_model_instance(model_instance))
+        return UnicodeJsonResponse(res)

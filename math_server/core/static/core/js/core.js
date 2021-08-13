@@ -166,33 +166,75 @@
         }
     })
 
-    math_server.directive('confirmationDialog', function() {
+    math_server.directive('chartViewer', function() {
         return {
             restrict: 'E',
             scope: {
-                callback: '='
+                series: '='
             },
             transclude: true,
             controller: function ($scope) {
-                let modalInstance = undefined
-                $scope.showModal = function(){
-                    modalInstance = new bootstrap.Modal(document.getElementById(`modal_${ $scope.$id }`), {})
-                    modalInstance.show()
+                let chart = undefined;
+
+                $scope.$watch('series', function(){
+                    $scope.updateChart()
+                }, true)
+
+                $scope.updateChart = function () {
+                    let chartData = []
+                    angular.forEach($scope.series, data => {
+                        chartData.push({
+                            name: data.name,
+                            type: "spline",
+                            // yValueFormatString: "#0.## м3",
+                            showInLegend: true,
+                            dataPoints: data.values
+                        })
+                    })
+                    chart = new CanvasJS.Chart("chartContainer", {
+                        animationEnabled: true,
+                        axisX: {
+                            valueFormatString: "DD.MM.YYYY"
+                        },
+                        axisY: {
+                            title: "Дебит (в м3)",
+                            suffix: " м3"
+                        },
+                        legend:{
+                            cursor: "pointer",
+                            fontSize: 16,
+                            // itemclick: toggleDataSeries
+                        },
+                        toolTip:{
+                            shared: true
+                        },
+                        data: chartData
+                    })
+
+                    chart.render();
                 }
 
-                $scope.closeModal = function(){
-                    modalInstance.hide()
+                window.toggleDataSeries = function(e) {
+                    if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                        e.dataSeries.visible = false;
+                    }
+                    else{
+                        e.dataSeries.visible = true;
+                    }
+                    chart.render();
                 }
             },
-
+            template: '<div id="chartContainer" style="width: 100%;"></div>'
         }
     })
+
 
     math_server.controller('modelsController', function ($scope, $http, $filter) {
         $scope.grouped_models = {}
         $scope.filtred_models = {}
         $scope.search = ''
         $scope.isProcessing = false
+        $scope.chartSeries = []
 
         $scope.$watch('search',  newValue => {
             $scope.filtred_models = {}
@@ -227,6 +269,7 @@
                     niz_table: [],
                     kin: 0,
                     total: 0,
+                    debit: 0,
                     referent_models: []
                 }
             }
@@ -241,8 +284,13 @@
             $scope.isProcessing = true
 
             $http.put('/api/math_model/wellproductionmodel', $scope.modelInstance.input_data, {headers: {'Content-Type': 'application/json', 'charset': 'utf-8'}}).then(
-                data => {
-                    console.log(data)
+                response => {
+                    $scope.modelInstance.output_data = response.data
+                    let production_series = {name: 'Прогноз', values: []}
+                    angular.forEach(response.data.production_table, row =>{
+                        production_series.values.push({x: new Date(row[0]), y: row[2]})
+                    })
+                    $scope.chartSeries = [production_series,]
                 }, rejection => {
                     console.log(rejection)
                 }).finally(()=>{

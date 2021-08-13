@@ -1,3 +1,4 @@
+{% load static %}
 {% verbatim %}
 <div class="row">
     <div class="col mt-3">
@@ -8,37 +9,45 @@
 <div class="row">
     <div class="col-12 col-md-5 col-lg-4">
         <h4>Исходные данные</h4>
-        <!--<form>-->
-            <div class="mb-3">
-                <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
-                    <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
-                       title="Введите таблицу из трех столбцов: Дата, Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
-                <niz-table-editor table="modelInstance.input_data.niz_table"></niz-table-editor>
-            </div>
-            <div class="mb-3">
-                <label for="id_kin" class="form-label">Коэффициент извлечения нефти, д.ед.</label>
-                <input type="number" step="0.001" min="0" max="1" class="form-control" id="id_kin" aria-describedby="kinHelp" ng-model="modelInstance.input_data.kin">
-                <div id="kinHelp" class="form-text">Введите значение в диапазоне от 0.000 до 1.000</div>
-            </div>
-            <div class="mb-3">
-                <label for="id_total" class="form-label">Величина геологических запасов, м<sup>3</sup></label>
-                <input type="number" step="1" class="form-control" id="id_total" ng-model="modelInstance.input_data.total">
-            </div>
-            <div class="mb-3">
-                <label for="" class="form-label">Референтные модели
-                    <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
-                       title="Вы можете добавить до трёх референтных моделей. Для каждой модели введите таблицу, состоящую из столбца с объемом добычи. Нажмите на кнопку добавить для добавления новой модели"></i>
-                </label>
-                <referent-model-table-editor referent-models="modelInstance.input_data.referent_models"></referent-model-table-editor>
-            </div>
-            <div class="mb-3">
-                <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing">
-                    <span ng-if="isProcessing"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Операция выполняется</span>
-                    <span ng-if="!isProcessing">Произвести моделирование</span>
-                </button>
-            </div>
-        <!--</form>-->
+        <div class="mb-3">
+            <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
+                <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                   title="Введите таблицу из трех столбцов: Дата, Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
+            <niz-table-editor table="modelInstance.input_data.niz_table"></niz-table-editor>
+        </div>
+        <div class="mb-3">
+            <label for="id_total" class="form-label">Величина геологических запасов, м<sup>3</sup></label>
+            <input type="number" class="form-control" id="id_total" ng-model="modelInstance.input_data.total"  step="0.000000000000001">
+        </div>
+        <div class="mb-3">
+            <label for="id_kin" class="form-label">Коэффициент извлечения нефти, д.ед.</label>
+            <input type="number" step="0.000000000000001" min="0" max="1" class="form-control" id="id_kin" aria-describedby="kinHelp" ng-model="modelInstance.input_data.kin">
+            <div id="kinHelp" class="form-text">Введите значение в диапазоне от 0.000 до 1.000</div>
+        </div>
+        <div class="mb-3">
+            <label for="id_debit" class="form-label">Дебит жидкости, м<sup>3</sup>/сут</label>
+            <input type="number" step="1" class="form-control" id="id_debit" ng-model="modelInstance.input_data.debit">
+        </div>
+        <div class="mb-3">
+            <label for="" class="form-label">Референтные модели
+                <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                   title="Вы можете добавить до трёх референтных моделей. Для каждой модели введите таблицу, состоящую из столбца с объемом добычи. Нажмите на кнопку добавить для добавления новой модели"></i>
+            </label>
+            <referent-model-table-editor referent-models="modelInstance.input_data.referent_models"></referent-model-table-editor>
+        </div>
+        <div class="mb-3">
+            <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing">
+                <span ng-if="isProcessing"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Операция выполняется</span>
+                <span ng-if="!isProcessing">Произвести моделирование</span>
+            </button>
+        </div>
+    </div>
+    <div class="col-12 col-md-7, col-lg-8" ng-if="modelInstance.output_data.production_table">
+        <h4>Результат</h4>
+        <div class="mb-2 me-2 mb-3">
+            <chart-viewer series="chartSeries"></chart-viewer>
+        </div>
     </div>
 </div>
-
+</div>
 {% endverbatim %}
