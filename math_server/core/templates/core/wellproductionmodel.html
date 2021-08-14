@@ -7,13 +7,13 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-12 col-md-5 col-lg-4">
+    <div class="col-12 col-md-6 col-lg-4">
         <h4>Исходные данные</h4>
         <div class="mb-3">
             <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
                    title="Введите таблицу из трех столбцов: Дата, Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
-            <niz-table-editor table="modelInstance.input_data.niz_table"></niz-table-editor>
+            <niz-table-editor table="modelInstance.input_data.niz_table" ng-cloak></niz-table-editor>
         </div>
         <div class="mb-3">
             <label for="id_total" class="form-label">Величина геологических запасов, м<sup>3</sup></label>
@@ -33,7 +33,7 @@
                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
                    title="Вы можете добавить до трёх референтных моделей. Для каждой модели введите таблицу, состоящую из столбца с объемом добычи. Нажмите на кнопку добавить для добавления новой модели"></i>
             </label>
-            <referent-model-table-editor referent-models="modelInstance.input_data.referent_models"></referent-model-table-editor>
+            <referent-model-table-editor referent-models="modelInstance.input_data.referent_models" ng-cloak></referent-model-table-editor>
         </div>
         <div class="mb-3">
             <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing">
@@ -42,10 +42,10 @@
             </button>
         </div>
     </div>
-    <div class="col-12 col-md-7, col-lg-8" ng-if="modelInstance.output_data.production_table">
+    <div class="col-12 col-md-6 col-lg-8" ng-if="modelInstance.output_data.production_table">
         <h4>Результат</h4>
         <div class="mb-2 me-2 mb-3">
-            <chart-viewer series="chartSeries"></chart-viewer>
+            <chart-viewer series="chartSeries" ng-cloak></chart-viewer>
         </div>
     </div>
 </div>

@@ -22,7 +22,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="row in niz_table_temp">
+                        <tr ng-repeat="row in niz_table_temp track by $index">
                             <td>{{ row[0] }}</td>
                             <td>{{ row[1] }}</td>
                             <td>{{ row[2] }}</td>

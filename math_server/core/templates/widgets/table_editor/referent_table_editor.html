@@ -39,8 +39,8 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="row in selectedModel.table">
-                            <td>{{ row[0] }}</td>
+                        <tr ng-repeat="item in selectedModel.table track by $index">
+                            <td>{{ item }}</td>
                         </tr>
                         </tbody>
                     </table>

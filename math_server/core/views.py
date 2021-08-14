@@ -56,8 +56,8 @@ class LoginRequiredTemplateView(LoginRequiredMixin, TemplateView):
 class UnicodeJsonResponse(JsonResponse):
 
     def __init__(self, *args, **kwargs):
-        # super(UnicodeJsonResponse, self).__init__(*args, encoder=CustomDatetimeJSONEncoder, json_dumps_params={'ensure_ascii': False}, **kwargs)
-        super(UnicodeJsonResponse, self).__init__(*args, json_dumps_params={'ensure_ascii': False}, **kwargs)
+        super(UnicodeJsonResponse, self).__init__(*args, encoder=CustomDatetimeJSONEncoder, json_dumps_params={'ensure_ascii': False}, **kwargs)
+        # super(UnicodeJsonResponse, self).__init__(*args, json_dumps_params={'ensure_ascii': False}, **kwargs)
 
 
 class MathModelAPIView(LoginRequiredMixin, View):

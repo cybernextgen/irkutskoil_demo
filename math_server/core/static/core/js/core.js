@@ -135,7 +135,11 @@
                 $scope.readFromClipboard = function(){
                     navigator.clipboard.readText().then(text => {
                         excelClipboardParser(text).then(text => {
-                            $scope.selectedModel.table = text
+                            $scope.selectedModel.table = []
+                            for(let i = 0; i < text.length; i++){
+                                $scope.selectedModel.table.push(Number(text[i]))
+                            }
+                            console.log($scope.selectedModel.table)
                             $scope.$apply()
                         })
                     })
@@ -174,57 +178,38 @@
             },
             transclude: true,
             controller: function ($scope) {
-                let chart = undefined;
+                let canvas_el = document.getElementById('chartContainer')
+                let chart = new Chart(canvas_el.getContext('2d'), {
+                    type: 'line',
+                    data: {},
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        aspectRatio: 1.618
+                    }
+                })
 
-                $scope.$watch('series', function(){
-                    $scope.updateChart()
-                }, true)
-
-                $scope.updateChart = function () {
-                    let chartData = []
-                    angular.forEach($scope.series, data => {
-                        chartData.push({
-                            name: data.name,
-                            type: "spline",
-                            // yValueFormatString: "#0.## м3",
-                            showInLegend: true,
-                            dataPoints: data.values
+                $scope.$watch('series', function(newValue){
+                    if(newValue){
+                        const colors = ['red', 'green', 'blue', 'gray']
+                        let data = {labels: $scope.series.labels, datasets: []}
+                        angular.forEach($scope.series.datasets, function(row, index) {
+                            data.datasets.push(angular.extend(row, {
+                                borderWidth: 3,
+                                pointRadius: 1,
+                                borderColor: colors[index],
+                                backgroundColor: colors[index]
+                            }))
                         })
-                    })
-                    chart = new CanvasJS.Chart("chartContainer", {
-                        animationEnabled: true,
-                        axisX: {
-                            valueFormatString: "DD.MM.YYYY"
-                        },
-                        axisY: {
-                            title: "Дебит (в м3)",
-                            suffix: " м3"
-                        },
-                        legend:{
-                            cursor: "pointer",
-                            fontSize: 16,
-                            // itemclick: toggleDataSeries
-                        },
-                        toolTip:{
-                            shared: true
-                        },
-                        data: chartData
-                    })
-
-                    chart.render();
-                }
-
-                window.toggleDataSeries = function(e) {
-                    if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                        e.dataSeries.visible = false;
+                        chart.data = data
+                        chart.update()
                     }
-                    else{
-                        e.dataSeries.visible = true;
-                    }
-                    chart.render();
-                }
+                }, true)
             },
-            template: '<div id="chartContainer" style="width: 100%;"></div>'
+            templateUrl: 'templates/widgets/chart_viewer.html'
         }
     })
 
@@ -234,7 +219,7 @@
         $scope.filtred_models = {}
         $scope.search = ''
         $scope.isProcessing = false
-        $scope.chartSeries = []
+        $scope.chartSeries = {}
 
         $scope.$watch('search',  newValue => {
             $scope.filtred_models = {}
@@ -280,17 +265,43 @@
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
 
+        $scope.updateChartSeries = function() {
+            let res = {labels: [], datasets: []}
+
+            let production_series = {label: 'Прогноз', data: []}
+            angular.forEach($scope.modelInstance.output_data.production_table, row =>{
+                production_series.data.push(row[2])
+                res.labels.push(row[0])
+            })
+            res.datasets.push(production_series)
+            angular.forEach($scope.modelInstance.input_data.referent_models, function(model) {
+                res.datasets.push({
+                    label: model.name,
+                    data: model.table
+                })
+            })
+            $scope.chartSeries = res
+        }
+
+        $scope.$watch('modelInstance.output_data', function(newValue) {
+            if(newValue){
+                $scope.updateChartSeries()
+            }
+        }, true)
+
+
+        $scope.$watch('modelInstance.input_data.referent_models', function(newValue) {
+            if(newValue){
+                $scope.updateChartSeries()
+            }
+        }, true)
+
         $scope.calculate = function(){
             $scope.isProcessing = true
 
             $http.put('/api/math_model/wellproductionmodel', $scope.modelInstance.input_data, {headers: {'Content-Type': 'application/json', 'charset': 'utf-8'}}).then(
                 response => {
                     $scope.modelInstance.output_data = response.data
-                    let production_series = {name: 'Прогноз', values: []}
-                    angular.forEach(response.data.production_table, row =>{
-                        production_series.values.push({x: new Date(row[0]), y: row[2]})
-                    })
-                    $scope.chartSeries = [production_series,]
                 }, rejection => {
                     console.log(rejection)
                 }).finally(()=>{

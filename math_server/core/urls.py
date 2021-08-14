@@ -17,6 +17,8 @@ urlpatterns = [
          LoginRequiredTemplateView.as_view(template_name='widgets/table_editor/niz_table_editor.html')),
     path('templates/widgets/table_editor/referent_table_editor.html',
          LoginRequiredTemplateView.as_view(template_name='widgets/table_editor/referent_table_editor.html')),
+    path('templates/widgets/chart_viewer.html',
+         LoginRequiredTemplateView.as_view(template_name='widgets/chart_viewer.html')),
     path(settings.LOGIN_URL, auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
     path(settings.LOGOUT_URL, auth_views.LogoutView.as_view(), name='logout'),
     re_path(r'^$', LoginRequiredTemplateView.as_view(template_name='core/index.html')),
