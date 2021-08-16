@@ -10,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from datetime import datetime, date
 from .models import CustomDatetimeJSONEncoder
+from .models import CalculationError
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ def dict_from_model_instance(model_instance):
 
 grouped_models_dict = {}
 models_classes_dict = {}
+
 
 for key, classes_list in settings.MATH_MODELS_AVAILABLE.items():
     for class_path in classes_list:
@@ -87,8 +89,10 @@ class MathModelAPIView(LoginRequiredMixin, View):
 
         model_instance = get_object_or_404(cls, user=request.user)
         model_instance.input_data = request_data
-        model_instance.calculate()
-        model_instance.save()
-        res = model_instance.output_data
-        # time.sleep(10)
-        return UnicodeJsonResponse(res)
+        try:
+            model_instance.calculate()
+            model_instance.save()
+            return UnicodeJsonResponse(model_instance.output_data)
+
+        except CalculationError as e:
+            return UnicodeJsonResponse({'bad_request_reason': str(e)}, status=400)

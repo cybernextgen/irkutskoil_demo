@@ -7,26 +7,39 @@
     </div>
 </div>
 <div class="row">
+
     <div class="col-12 col-md-6 col-lg-4">
         <h4>Исходные данные</h4>
         <div class="mb-3">
             <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
                    title="Введите таблицу из трех столбцов: Дата, Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
-            <niz-table-editor table="modelInstance.input_data.niz_table"></niz-table-editor>
+            <niz-table-editor table="modelInstance.input_data.niz_table" class="is-invalid"></niz-table-editor>
+            <div class="invalid-feedback" ng-if="validationErrors.niz_table">
+                {{validationErrors.niz_table}}
+            </div>
         </div>
         <div class="mb-3">
             <label for="id_total" class="form-label">Величина геологических запасов, м<sup>3</sup></label>
-            <input type="number" class="form-control" id="id_total" ng-model="modelInstance.input_data.total"  step="0.000000000000001">
+            <input type="number" class="form-control" id="id_total" step="0.000000000000001" ng-model="modelInstance.input_data.total" ng-class="{'is-invalid': validationErrors.total}">
+            <div class="invalid-feedback" ng-if="validationErrors.total">
+                {{validationErrors.total}}
+            </div>
         </div>
         <div class="mb-3">
             <label for="id_kin" class="form-label">Коэффициент извлечения нефти, д.ед.</label>
-            <input type="number" step="0.000000000000001" min="0" max="1" class="form-control" id="id_kin" aria-describedby="kinHelp" ng-model="modelInstance.input_data.kin">
+            <input type="number" step="0.000000000000001" min="0" max="1" class="form-control" id="id_kin" aria-describedby="kinHelp" ng-model="modelInstance.input_data.kin" ng-class="{'is-invalid': validationErrors.kin}">
             <div id="kinHelp" class="form-text">Введите значение в диапазоне от 0.000 до 1.000</div>
+            <div class="invalid-feedback" ng-if="validationErrors.kin">
+                {{validationErrors.kin}}
+            </div>
         </div>
         <div class="mb-3">
             <label for="id_debit" class="form-label">Дебит жидкости, м<sup>3</sup>/сут</label>
-            <input type="number" step="1" class="form-control" id="id_debit" ng-model="modelInstance.input_data.debit">
+            <input type="number" step="1" class="form-control" id="id_debit" ng-model="modelInstance.input_data.debit" ng-class="{'is-invalid': validationErrors.debit}">
+            <div class="invalid-feedback" ng-if="validationErrors.debit">
+                {{validationErrors.debit}}
+            </div>
         </div>
         <div class="mb-3">
             <label for="" class="form-label">Референтные модели
@@ -36,10 +49,13 @@
             <referent-model-table-editor referent-models="modelInstance.input_data.referent_models"></referent-model-table-editor>
         </div>
         <div class="mb-3">
-            <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing">
+            <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing" ng-class="{'is-invalid': validationErrors.bad_request_reason}">
                 <span ng-if="isProcessing"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Операция выполняется</span>
                 <span ng-if="!isProcessing">Произвести моделирование</span>
             </button>
+            <div class="invalid-feedback" ng-if="validationErrors.bad_request_reason">
+                {{validationErrors.bad_request_reason}}
+            </div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-8" ng-if="modelInstance.output_data.production_table">
@@ -55,18 +71,18 @@
                 Таблица "Добыча в месяц / дебит в сутки"
                 <table class="table table-striped table-bordered table-hover table-sm">
                     <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Добыча в месяц, м<sup>3</sup></th>
-                            <th>Дебит в сутки, м<sup>3</sup></th>
-                        </tr>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Добыча в месяц, м<sup>3</sup></th>
+                        <th>Дебит в сутки, м<sup>3</sup></th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="row in modelInstance.output_data.production_table">
-                            <td>{{ row[0] }}</td>
-                            <td>{{ row[1] | number:2 }}</td>
-                            <td>{{ row[2] | number:2 }}</td>
-                        </tr>
+                    <tr ng-repeat="row in modelInstance.output_data.production_table">
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] | number:2 }}</td>
+                        <td>{{ row[2] | number:2 }}</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>

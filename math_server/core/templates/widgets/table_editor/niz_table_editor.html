@@ -1,5 +1,5 @@
 {% verbatim %}
-<button type="button" class="form-control btn" ng-click="showModal()" ng-class="{'btn-outline-secondary': !table.length, 'btn-secondary': table.length}">Редактировать</button>
+<button type="button" class="form-control btn" ng-click="showModal()" ng-class="{'btn-outline-secondary': !table.length, 'btn-secondary': table.length, 'is-invalid': isInvalid}">Редактировать</button>
 <!--<button id="directive_{{ $id }}" type="button" data-bs-toggle="modal" data-bs-target="#modal_{{ $id }}" class="form-control btn btn-outline-secondary">Редактировать</button>-->
 <div class="modal fade" id="modal_{{ $id }}" tabindex="-1" aria-labelledby="modal_label_{{ $id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
