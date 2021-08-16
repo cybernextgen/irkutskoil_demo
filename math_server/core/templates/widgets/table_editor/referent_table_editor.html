@@ -25,12 +25,15 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label for="model_name_{{ $id }}" class="form-label">Название модели</label>
-                    <input type="text" class="form-control" id="model_name_{{ $id }}" ng-model="selectedModel.name">
+                    <input type="text" class="form-control" id="model_name_{{ $id }}" ng-model="selectedModel.name" minlength="1" maxlength="50">
                 </div>
                 <h5>Таблица "Дебит нефти"</h5>
                 <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="readFromClipboard()">Вставить из буфера</button>
                 <button type="button" class="btn  btn-sm btn-danger" ng-click="clear()" ng-disabled="!selectedModel.table.length">Очистить</button>
                 <!--<button type="button" class="btn btn-sm btn-outline-secondary">Вставить из xlsx</button>-->
+                <div class="text-danger mt-2">
+                    {{ validationError }}
+                </div>
                 <div class="mt-2">
                     <table ng-if="selectedModel.table.length" class="table table-striped">
                         <thead>
@@ -48,7 +51,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" ng-click="closeModal()">Отмена</button>
-                <button type="button" class="btn btn-primary" ng-click="save()">Сохранить</button>
+                <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="!selectedModel.table.length || !selectedModel.name">Сохранить</button>
             </div>
         </div>
     </div>

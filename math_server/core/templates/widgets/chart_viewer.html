@@ -1,1 +1,15 @@
-<canvas id="chartContainer" class="mw-100"></canvas>
+{% verbatim %}
+<div class="row">
+    <div class="col">
+        <canvas id="chartContainer" class="mw-100"></canvas>
+    </div>
+</div>
+<div class="row align-items-center">
+    <div class="col">
+        Отобразить:
+        <span ng-repeat="dataset in chart.data.datasets">
+            <button type="button" class="btn" ng-class="{'btn-outline-secondary': dataset.hidden, 'btn-secondary': !dataset.hidden}" ng-click="changeDatatsetVisibility($index)">{{ dataset.label }}</button>
+        </span>
+    </div>
+</div>
+{% endverbatim %}

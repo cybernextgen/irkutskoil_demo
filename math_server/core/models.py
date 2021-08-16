@@ -8,6 +8,7 @@ from bisect import bisect_left
 from decimal import Decimal
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+import dateutil.parser
 
 
 class CustomDatetimeJSONEncoder(DjangoJSONEncoder):
@@ -118,9 +119,9 @@ class WellProductionModel(BaseMathModel):
         current_debit = 0
 
         for index, niz_row in enumerate(niz_table):
-            current_date = datetime.strptime(niz_row[0], datetime_format)
+            current_date = dateutil.parser.isoparse(niz_row[0])
             if index < (len(niz_table) - 1):
-                next_date = datetime.strptime(niz_table[index + 1][0], datetime_format)
+                next_date = dateutil.parser.isoparse(niz_table[index + 1][0])
             else:
                 next_date = current_date.replace(day=1) + relativedelta(months=1)
 

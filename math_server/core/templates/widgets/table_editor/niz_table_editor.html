@@ -12,6 +12,9 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="readFromClipboard()">Вставить из буфера</button>
                 <button type="button" class="btn  btn-sm btn-danger" ng-click="clear()" ng-disabled="!niz_table_temp.length">Очистить</button>
                 <!--<button type="button" class="btn btn-sm btn-outline-secondary">Вставить из xlsx</button>-->
+                <div class="text-danger mt-2">
+                    {{ validationError }}
+                </div>
                 <div class="mt-2">
                     <table ng-if="niz_table_temp.length" class="table table-striped">
                         <thead>
@@ -23,7 +26,7 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="row in niz_table_temp track by $index">
-                            <td>{{ row[0] }}</td>
+                            <td>{{ row[0] | date:"dd.MM.yyyy" }}</td>
                             <td>{{ row[1] }}</td>
                             <td>{{ row[2] }}</td>
                         </tr>
@@ -33,7 +36,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" ng-click="closeModal()">Отмена</button>
-                <button type="button" class="btn btn-primary" ng-click="save()">Сохранить</button>
+                <button type="button" class="btn btn-primary" ng-click="save()" ng-disabled="!niz_table_temp.length">Сохранить</button>
             </div>
         </div>
     </div>
