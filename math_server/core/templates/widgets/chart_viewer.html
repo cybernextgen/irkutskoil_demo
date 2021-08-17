@@ -8,7 +8,7 @@
     <div class="col">
         Отобразить:
         <span ng-repeat="dataset in chart.data.datasets">
-            <button type="button" class="btn" ng-class="{'btn-outline-secondary': dataset.hidden, 'btn-secondary': !dataset.hidden}" ng-click="changeDatatsetVisibility($index)">{{ dataset.label }}</button>
+            <button type="button" class="btn mb-2" ng-class="{'btn-outline-secondary': dataset.hidden, 'btn-secondary': !dataset.hidden}" ng-click="changeDatatsetVisibility($index)">{{ dataset.label }}</button>
         </span>
     </div>
 </div>

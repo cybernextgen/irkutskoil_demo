@@ -1,0 +1,45 @@
+{% load static %}
+{% verbatim %}
+<div class="row">
+    <div class="col mt-3">
+        <h3>{{ modelInstance.verbose_name }}</h3>
+        <p>{{ modelInstance.description }}</p>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-md-6 col-lg-4">
+
+        <div class="mb-3">
+            <label for="val1Input">Значение №1</label>
+            <input type="number" step="0.001" class="form-control" id="val1Input" max="1000000000" min="-1000000000" ng-model="modelInstance.input_data.val1" ng-class="{'is-invalid': validationErrors.val1}">
+            <div class="invalid-feedback" ng-if="validationErrors.val1">
+                {{validationErrors.val1}}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="">Оператор</label>
+            <select class="form-control" ng-options="operation as operation.label for operation in operationsAvailable track by operation.id" ng-model="modelInstance.input_data.op"></select>
+        </div>
+        <div class="mb-3">
+            <label for="val2Input">Значение №2</label>
+            <input type="number" step="0.001" class="form-control" id="val2Input" max="1000000000" min="-1000000000" ng-model="modelInstance.input_data.val2" ng-class="{'is-invalid': validationErrors.val2}">
+            <div class="invalid-feedback" ng-if="validationErrors.val2">
+                {{validationErrors.val2}}
+            </div>
+        </div>
+        <div class="mb-3" ng-if="modelInstance.output_data.result != undefined">
+            <label for="val2Input">Результат</label>
+            <input type="number" class="form-control" id="resultOutput" ng-model="modelInstance.output_data.result" disabled readonly>
+        </div>
+        <div class="mb-3">
+            <button class="form-control btn btn-primary" id="" ng-click="calculate()" ng-disabled="isProcessing" ng-class="{'is-invalid': validationErrors.bad_request_reason}">
+                <span ng-if="isProcessing"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Операция выполняется</span>
+                <span ng-if="!isProcessing">Произвести моделирование</span>
+            </button>
+            <div class="invalid-feedback" ng-if="validationErrors.bad_request_reason">
+                {{validationErrors.bad_request_reason}}
+            </div>
+        </div>
+    </div>
+</div>
+{% endverbatim %}

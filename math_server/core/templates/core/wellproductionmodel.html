@@ -14,7 +14,7 @@
             <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
                    title="Введите таблицу из трех столбцов: Дата, Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
-            <niz-table-editor table="modelInstance.input_data.niz_table" class="is-invalid"></niz-table-editor>
+            <niz-table-editor table="modelInstance.input_data.niz_table" is-invalid="validationErrors.niz_table" ng-class="{'is-invalid': validationErrors.niz_table}"></niz-table-editor>
             <div class="invalid-feedback" ng-if="validationErrors.niz_table">
                 {{validationErrors.niz_table}}
             </div>
@@ -61,15 +61,19 @@
     <div class="col-12 col-md-6 col-lg-8" ng-if="modelInstance.output_data.production_table">
         <h4>Результат</h4>
         <chart-viewer series="chartSeries"></chart-viewer>
-        <div class="row mb-3 mt-3">
+        <div class="row mb-3 mt-1">
             <div class="col">
-                Начальные извлекаемые запасы (НИЗ), м<sup>3</sup>: {{ modelInstance.output_data.niz | number:2 }}
+                Начальные извлекаемые запасы (НИЗ), м<sup>3</sup>: <strong>{{ modelInstance.output_data.niz | number:2 }}</strong>
             </div>
         </div>
         <div class="row">
             <div class="col">
                 Таблица "Добыча в месяц / дебит в сутки"
-                <table class="table table-striped table-bordered table-hover table-sm">
+                <button type="button" class="btn btn-sm" id="copyResultTableButton" ngclipboard data-clipboard-target="#resultTable" ngclipboard-success="onCopyToClipboardSuccess(e)" ngclipboard-error="onCopyToClipboardError(e)">
+                    <i class="bi bi-clipboard" ng-if="!copyToClipboardButtonsState.copyResultTableButton"></i>
+                    <i class="bi bi-clipboard-check" ng-if="copyToClipboardButtonsState.copyResultTableButton"></i>
+                </button>
+                <table class="table table-striped table-bordered table-hover table-sm" id="resultTable">
                     <thead>
                     <tr>
                         <th>Дата</th>

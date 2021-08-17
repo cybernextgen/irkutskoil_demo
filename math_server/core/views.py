@@ -1,14 +1,13 @@
-from django.shortcuts import render
 import logging
 import json
-from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse
+from django.http import HttpResponseNotFound
 from django.conf import settings
 from django.utils.module_loading import import_string
 from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from datetime import datetime, date
 from .models import CustomDatetimeJSONEncoder
 from .models import CalculationError
 
@@ -66,7 +65,7 @@ class MathModelAPIView(LoginRequiredMixin, View):
     """
     REST JSON API for MathModel
     """
-    def get(self, request, *args, **kwargs):
+    def get(self, request, **kwargs):
         requested_model_id = kwargs.get('model_id')
         if not requested_model_id:
             return UnicodeJsonResponse(grouped_models_dict)
@@ -76,13 +75,13 @@ class MathModelAPIView(LoginRequiredMixin, View):
                 return HttpResponseNotFound()
 
             model_instance, created_flag = cls.objects.get_or_create(user=request.user)
-            # return JsonResponse(dict_from_model_instance(model_instance), json_dumps_params={'ensure_ascii': False})
             return UnicodeJsonResponse(dict_from_model_instance(model_instance))
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request, **kwargs):
         requested_model_id = kwargs.get('model_id')
         cls = models_classes_dict.get(requested_model_id)
         if not cls:
+            logger.warning('Unable to put data into non existing "{}" API endpoint'.format(requested_model_id))
             return HttpResponseNotFound()
 
         request_data = json.loads(request.body.decode("utf-8"))
@@ -95,4 +94,6 @@ class MathModelAPIView(LoginRequiredMixin, View):
             return UnicodeJsonResponse(model_instance.output_data)
 
         except CalculationError as e:
-            return UnicodeJsonResponse({'bad_request_reason': str(e)}, status=400)
+            error_text = str(e)
+            logger.warning('Calculation error for model "{}". Reason "{}"'.format(requested_model_id, error_text))
+            return UnicodeJsonResponse({'bad_request_reason': error_text}, status=400)

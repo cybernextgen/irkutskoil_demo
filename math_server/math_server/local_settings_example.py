@@ -5,6 +5,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+COMPRESS_ENABLED = False
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-rhb%&1v))9hkb*7aul7#2%zx-0k7p7v+h$*b(ocmcb(e6a^c-r'
 

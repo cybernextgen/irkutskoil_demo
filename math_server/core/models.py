@@ -159,7 +159,34 @@ class SimpleCalculatorModel(BaseMathModel):
     Model predicts oil production
     """
     def calculate(self):
-        pass
+        if not self.input_data:
+            raise CalculationError('Отсутствуют входные данные для алгоритма')
+
+        val1 = self.input_data.get('val1')
+        print(val1)
+        if val1 is None or val1 == '':
+            raise CalculationError('Не указан опертор №1')
+        val1 = Decimal(val1)
+
+        val2 = self.input_data.get('val2')
+        if val2 is None or val2 == '':
+            raise CalculationError('Не указан опертор №2')
+        val2 = Decimal(val2)
+
+        requested_opeartion = self.get_operations().get(self.input_data.get('op'))
+        if not requested_opeartion:
+            raise CalculationError('Не указана арифметическая операция, либо операция не поддерживается')
+        self.output_data['result'] = float(requested_opeartion(val1, val2))
+        return self.output_data
+
+    @staticmethod
+    def get_operations():
+        return {
+            'add': lambda a, b: a + b,
+            'sub': lambda a, b: a - b,
+            'mul': lambda a, b: a * b,
+            'div': lambda a, b: a / b if b > 0 else 0,
+        }
 
     @staticmethod
     def get_icon_path():

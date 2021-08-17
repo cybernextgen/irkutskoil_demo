@@ -2,7 +2,7 @@
 (function (angular, bootstrap) {
   class ValidationError extends Error {}
 
-  const mathServer = angular.module('mathServer', ['ui.router'])
+  const mathServer = angular.module('mathServer', ['ui.router', 'ngclipboard'])
 
   mathServer.config([
     '$httpProvider',
@@ -25,6 +25,10 @@
         url: '/models/wellproductionmodel',
         templateUrl: 'templates/wellproductionmodel.html',
         controller: 'wellproductionmodelController'
+      }).state('simplecalculatormodel', {
+        url: '/models/simplecalculatormodel',
+        templateUrl: 'templates/simplecalculatormodel.html',
+        controller: 'simplecalculatormodelController'
       })
     }])
 
@@ -56,6 +60,7 @@
     return text => {
       if (!text) throw new ValidationError('Дата не указана')
       const splittedDateString = text.split('.')
+      console.log(splittedDateString)
       const date = new Date(`${splittedDateString[2]}-${splittedDateString[1]}-${splittedDateString[0]}`)
       if (isNaN(date)) throw new ValidationError(`Неверный формат даты: ${text}`)
       return date
@@ -64,7 +69,7 @@
 
   mathServer.factory('numberParser', function () {
     return text => {
-      if (!text) throw new ValidationError('Значение не указано')
+      if (text === null || text === '') throw new ValidationError('Значение не указано')
       const parsedNumber = Number(text)
       if (isNaN(parsedNumber)) throw new ValidationError(`Неверный формат числа: ${text}`)
       return parsedNumber
@@ -314,7 +319,7 @@
   mathServer.controller('wellproductionmodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
     $http.get('/api/math_model/wellproductionmodel').then(response => {
       $scope.modelInstance = response.data
-      if (!$scope.modelInstance.input_data) {
+      if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
         $scope.modelInstance.input_data = {
           niz_table: [],
           kin: 0,
@@ -328,6 +333,8 @@
     $scope.isProcessing = false
     $scope.chartSeries = {}
     $scope.validationErrors = {}
+    $scope.copyToClipboardButtonsState = {}
+
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     tooltipTriggerList.map(tooltipTriggerEl => {
       return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -386,6 +393,81 @@
       if (isEmptyObjectChecker($scope.validationErrors)) {
         $scope.isProcessing = true
         $http.put('/api/math_model/wellproductionmodel', $scope.modelInstance.input_data, { headers: { 'Content-Type': 'application/json', charset: 'utf-8' } }).then(
+          response => {
+            $scope.modelInstance.output_data = response.data
+          }, rejection => {
+            if (rejection.status === 400) $scope.validationErrors.bad_request_reason = rejection.data.bad_request_reason
+          }).finally(() => {
+          $scope.isProcessing = false
+        })
+      }
+    }
+
+    $scope.onCopyToClipboardSuccess = (e) => {
+      const buttonId = e.trigger.id
+      if (buttonId) $scope.copyToClipboardButtonsState[e.trigger.id] = true
+      e.clearSelection()
+    }
+
+    $scope.onCopyToClipboardError = (e) => {
+      e.clearSelection()
+    }
+  })
+
+  mathServer.controller('simplecalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
+    $http.get('/api/math_model/simplecalculatormodel').then(response => {
+      $scope.operationsAvailable = [
+        { id: 'add', label: 'Сложение' },
+        { id: 'sub', label: 'Вычитание' },
+        { id: 'mul', label: 'Умножение' },
+        { id: 'div', label: 'Деление' }
+      ]
+      $scope.validationErrors = {}
+
+      const operationsMap = {}
+      $scope.operationsAvailable.forEach((operationObject) => {
+        operationsMap[operationObject.id] = operationObject
+      })
+
+      $scope.modelInstance = response.data
+
+      if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
+        $scope.modelInstance.input_data = {
+          val1: 0,
+          val2: 0,
+          op: $scope.operationsAvailable[0]
+        }
+      } else {
+        $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
+      }
+    })
+
+    $scope.validateInput = () => {
+      $scope.validationErrors = {}
+      const numberFields = ['val1', 'val2']
+      numberFields.forEach((fieldName) => {
+        try {
+          numberParser($scope.modelInstance.input_data[fieldName])
+        } catch (e) {
+          if (e instanceof ValidationError) {
+            $scope.validationErrors[fieldName] = `Ошибка валидации! ${e.message}`
+          } else throw e
+        }
+      })
+    }
+
+    $scope.calculate = () => {
+      $scope.validateInput()
+      if (isEmptyObjectChecker($scope.validationErrors)) {
+        $scope.isProcessing = true
+        const dataToSend = { ...$scope.modelInstance.input_data }
+        dataToSend.op = dataToSend.op.id
+        $http.put('/api/math_model/simplecalculatormodel', dataToSend, {
+          headers: {
+            'Content-Type': 'application/json',
+            charset: 'utf-8'
+          }
+        }).then(
           response => {
             $scope.modelInstance.output_data = response.data
           }, rejection => {
