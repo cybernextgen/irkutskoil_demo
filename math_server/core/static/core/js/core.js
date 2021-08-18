@@ -29,6 +29,10 @@
         url: '/models/simplecalculatormodel',
         templateUrl: 'templates/simplecalculatormodel.html',
         controller: 'simplecalculatormodelController'
+      }).state('asynccalculatormodel', {
+        url: '/models/asynccalculatormodel',
+        templateUrl: 'templates/asynccalculatormodel.html',
+        controller: 'asynccalculatormodelController'
       })
     }])
 
@@ -42,7 +46,7 @@
         const rows = []
         rowsOfText.forEach(rowAsText => {
           const row = rowAsText.split('\t').map((colAsText) => {
-            return colAsText.trim().replace(/^"(.*)"$/, '$1')
+            return colAsText.trim().replace(/^"(.*)"$/, '$1').replace(',', '.')
           })
           if (header.length === 0) {
             while (row.length && !row[row.length - 1].trim()) row.pop()
@@ -56,13 +60,19 @@
     }
   })
 
+  mathServer.filter('roundTo', function (numberFilter) {
+    return (value, maxDecimals) => {
+      return value.toFixed(maxDecimals).replace(/(?:\.0+|(\.\d+?)0+)$/, "$1")
+    }
+  })
+
   mathServer.factory('ruLocaleDateParser', function () {
     return text => {
       if (!text) throw new ValidationError('Дата не указана')
       const splittedDateString = text.split('.')
       console.log(splittedDateString)
       const date = new Date(`${splittedDateString[2]}-${splittedDateString[1]}-${splittedDateString[0]}`)
-      if (isNaN(date)) throw new ValidationError(`Неверный формат даты: ${text}`)
+      if (isNaN(date)) throw new ValidationError(`Неверный формат даты: ${text}. Укажите дату в формате ДД.ММ,ГГГГ`)
       return date
     }
   })
@@ -130,6 +140,8 @@
                 $scope.validationError = `Ошибка валидации! ${e.message}`
                 $scope.$apply()
               }
+            }, (rejection) => {
+              $scope.validationError = `Ошибка парсинга! ${rejection.message}`
             })
           })
         }
@@ -198,6 +210,8 @@
               }
 
               $scope.$apply()
+            }, (rejection) => {
+              $scope.validationError = `Ошибка парсинга! ${rejection.message}`
             })
           })
         }
@@ -285,6 +299,73 @@
     }
   })
 
+  mathServer.directive('notificationViewer', function () {
+    return {
+      restrict: 'E',
+      scope: {
+        limit: '='
+      },
+      transclude: true,
+      controller: function ($scope, $http, $filter) {
+        $scope.notifications = []
+        $scope.popoverHTML = ''
+        $scope.isPopoverShown = false
+        const popoverConfig = {
+          trigger: 'focus',
+          html: true,
+          content: () => $scope.popoverHTML,
+          fallbackPlacements: ['bottom'],
+          placement: 'bottom'
+        }
+        const popoverTrigger = document.getElementById('notification_popover')
+        let popoverInstance = new bootstrap.Popover(popoverTrigger, popoverConfig)
+        $scope.generatePopoverHTML = () => {
+          $scope.popoverHTML = '<h5>Последние уведомления</h5><ul class="list-group">'
+          $scope.notifications.forEach((notification) => {
+            const timestamp = $filter('date')(notification.created_timestamp, 'dd.MM.yy HH:mm')
+            const statusClass = notification.is_success ? 'list-group-item-success' : 'list-group-item-danger'
+            $scope.popoverHTML += `<li class="list-group-item ${statusClass}"><h6>${timestamp}</h6> ${notification.description}</li>`
+          })
+          $scope.popoverHTML += '</ul>'
+        }
+
+        $scope.handlePopover = () => {
+          popoverInstance.toggle()
+        }
+
+        $scope.acknowledge = (id) => {
+          console.log('ack')
+        }
+
+        $scope.updatePopover = () => {
+          if (!$scope.isPopoverShown) {
+            popoverInstance.dispose()
+            popoverInstance = new bootstrap.Popover(popoverTrigger, popoverConfig)
+
+            popoverTrigger.addEventListener('show.bs.popover', function () {
+              $scope.isPopoverShown = true
+            })
+            popoverTrigger.addEventListener('hidden.bs.popover', function () {
+              $scope.isPopoverShown = false
+            })
+          }
+        }
+
+        $scope.loadNotifications = () => {
+          $http.get('/api/notification/new/3').then(response => {
+            $scope.notifications = response.data
+            $scope.generatePopoverHTML()
+            $scope.updatePopover()
+          })
+        }
+        setInterval(() => { $scope.loadNotifications() }, 10000)
+
+        $scope.loadNotifications()
+      },
+      templateUrl: 'templates/widgets/notification_viewer.html'
+    }
+  })
+
   mathServer.controller('modelsController', function ($scope, $http, $filter) {
     $scope.grouped_models = {}
     $scope.filtred_models = {}
@@ -316,7 +397,7 @@
     $scope.loadModels()
   })
 
-  mathServer.controller('wellproductionmodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
+  mathServer.controller('wellproductionmodelController', function ($scope, $http, numberParser, isEmptyObjectChecker, $filter) {
     $http.get('/api/math_model/wellproductionmodel').then(response => {
       $scope.modelInstance = response.data
       if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
@@ -346,7 +427,7 @@
 
       angular.forEach($scope.modelInstance.output_data.production_table, row => {
         productionSeries.data.push(row[2])
-        res.labels.push(row[0])
+        res.labels.push($filter('date')(row[0], 'dd.MM.yy'))
       })
       res.datasets.push(productionSeries)
       angular.forEach($scope.modelInstance.input_data.referent_models, (model) => {
@@ -477,5 +558,79 @@
         })
       }
     }
+  })
+
+  mathServer.controller('asynccalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
+    $scope.operationsAvailable = [
+      { id: 'add', label: 'Сложение' },
+      { id: 'sub', label: 'Вычитание' },
+      { id: 'mul', label: 'Умножение' },
+      { id: 'div', label: 'Деление' }
+    ]
+    $scope.validationErrors = {}
+
+    $scope.loadModel = () => {
+      $http.get('/api/math_model/asynccalculatormodel').then(response => {
+        const operationsMap = {}
+        $scope.operationsAvailable.forEach((operationObject) => {
+          operationsMap[operationObject.id] = operationObject
+        })
+        $scope.modelInstance = response.data
+        if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
+          $scope.modelInstance.input_data = {
+            val1: 0,
+            val2: 0,
+            op: $scope.operationsAvailable[0]
+          }
+          $scope.modelInstance.is_ready = false
+          $scope.modelInstance.is_processing = false
+        } else {
+          $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
+        }
+      })
+    }
+
+    $scope.validateInput = () => {
+      $scope.validationErrors = {}
+      const numberFields = [ 'val2']
+      numberFields.forEach((fieldName) => {
+        try {
+          numberParser($scope.modelInstance.input_data[fieldName])
+        } catch (e) {
+          if (e instanceof ValidationError) {
+            $scope.validationErrors[fieldName] = `Ошибка валидации! ${e.message}`
+          } else throw e
+        }
+      })
+    }
+
+    $scope.$watch('modelInstance.is_processing', (newValue) => {
+      if (newValue !== undefined) {
+        if ($scope.modelInstance.is_processing === true) {
+          $scope.interval = setInterval(() => {
+            $scope.loadModel()
+          }, 2000)
+        } else {
+          clearInterval($scope.interval)
+        }
+      }
+    })
+
+    $scope.calculate = () => {
+      $scope.validateInput()
+      if (isEmptyObjectChecker($scope.validationErrors)) {
+        $scope.modelInstance.is_processing = true
+        const dataToSend = { ...$scope.modelInstance.input_data }
+        dataToSend.op = dataToSend.op.id
+        $http.put('/api/math_model/asynccalculatormodel', dataToSend, {
+          headers: {
+            'Content-Type': 'application/json',
+            charset: 'utf-8'
+          }
+        })
+      }
+    }
+
+    $scope.loadModel()
   })
 })(angular, bootstrap)

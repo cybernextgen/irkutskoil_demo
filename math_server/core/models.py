@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 import dateutil.parser
+import time
 
 
 class CustomDatetimeJSONEncoder(DjangoJSONEncoder):
@@ -36,9 +37,9 @@ class BaseMathModel(models.Model):
 
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
-    input_data = models.JSONField(default=dict, encoder=CustomDatetimeJSONEncoder)
+    input_data = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
-    output_data = models.JSONField(default=dict, encoder=CustomDatetimeJSONEncoder)
+    output_data = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
     def calculate(self):
         raise NotImplementedError
@@ -60,6 +61,8 @@ class AsyncMathModel(BaseMathModel):
     Async math models
     """
     is_ready = models.BooleanField(default=False)
+
+    is_processing = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -154,31 +157,7 @@ class WellProductionModel(BaseMathModel):
         verbose_name = 'Прогнозирование добычи'
 
 
-class SimpleCalculatorModel(BaseMathModel):
-    """
-    Model predicts oil production
-    """
-    def calculate(self):
-        if not self.input_data:
-            raise CalculationError('Отсутствуют входные данные для алгоритма')
-
-        val1 = self.input_data.get('val1')
-        print(val1)
-        if val1 is None or val1 == '':
-            raise CalculationError('Не указан опертор №1')
-        val1 = Decimal(val1)
-
-        val2 = self.input_data.get('val2')
-        if val2 is None or val2 == '':
-            raise CalculationError('Не указан опертор №2')
-        val2 = Decimal(val2)
-
-        requested_opeartion = self.get_operations().get(self.input_data.get('op'))
-        if not requested_opeartion:
-            raise CalculationError('Не указана арифметическая операция, либо операция не поддерживается')
-        self.output_data['result'] = float(requested_opeartion(val1, val2))
-        return self.output_data
-
+class Calculator(object):
     @staticmethod
     def get_operations():
         return {
@@ -187,6 +166,39 @@ class SimpleCalculatorModel(BaseMathModel):
             'mul': lambda a, b: a * b,
             'div': lambda a, b: a / b if b > 0 else 0,
         }
+
+    @staticmethod
+    def calculate(input_data):
+        if not input_data:
+            raise CalculationError('Отсутствуют входные данные для алгоритма')
+
+        val1 = input_data.get('val1')
+        if val1 is None or val1 == '':
+            raise CalculationError('Не указан опертор №1')
+        val1 = Decimal(val1)
+
+        val2 = input_data.get('val2')
+        if val2 is None or val2 == '':
+            raise CalculationError('Не указан опертор №2')
+        val2 = Decimal(val2)
+
+        requested_opeartion = Calculator.get_operations().get(input_data.get('op'))
+        if not requested_opeartion:
+            raise CalculationError('Не указана арифметическая операция, либо операция не поддерживается')
+        return float(requested_opeartion(val1, val2))
+
+
+class SimpleCalculatorModel(BaseMathModel):
+    """
+    Model predicts oil production
+    """
+    def calculate(self):
+        self.output_data['result'] = Calculator.calculate(self.input_data)
+        return self.output_data
+
+    @staticmethod
+    def get_operations():
+        return Calculator.get_operations()
 
     @staticmethod
     def get_icon_path():
@@ -204,8 +216,15 @@ class AsyncCalculatorModel(AsyncMathModel):
     """
     Model predicts oil production
     """
+
     def calculate(self):
-        pass
+        self.output_data['result'] = Calculator.calculate(self.input_data)
+        time.sleep(30)
+        return self.output_data
+
+    @staticmethod
+    def get_operations():
+        return Calculator.get_operations()
 
     @staticmethod
     def get_icon_path():
@@ -217,3 +236,24 @@ class AsyncCalculatorModel(AsyncMathModel):
 
     class Meta:
         verbose_name = 'Асинхронный калькулятор'
+
+
+class Notification(models.Model):
+    """
+    Notification for user about calculation was done
+    """
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    math_model_id = models.CharField(max_length=50)
+
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+
+    is_success = models.BooleanField(default=False)
+
+    description = models.CharField(max_length=255, null=True)
+
+    is_acknowledged = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Уведомление'
+        verbose_name_plural = 'Уведомления'

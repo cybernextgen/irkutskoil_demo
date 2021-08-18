@@ -83,9 +83,9 @@
                     </thead>
                     <tbody>
                     <tr ng-repeat="row in modelInstance.output_data.production_table">
-                        <td>{{ row[0] }}</td>
-                        <td>{{ row[1] | number:2 }}</td>
-                        <td>{{ row[2] | number:2 }}</td>
+                        <td>{{ row[0] | date:'dd.MM.yy' }}</td>
+                        <td>{{ row[1] | roundTo:2 }}</td>
+                        <td>{{ row[2] | roundTo:2 }}</td>
                     </tr>
                     </tbody>
                 </table>
