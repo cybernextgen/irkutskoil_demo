@@ -1,12 +1,16 @@
 {% load static %}
 {% verbatim %}
-<div class="row">
+<div class="spinner-border text-secondary mt-3" role="status" ng-if="!dataIsReady">
+    <span class="visually-hidden">Загрузка...</span>
+</div>
+
+<div class="row" ng-if="dataIsReady">
     <div class="col mt-3">
         <h3>{{ modelInstance.verbose_name }}</h3>
         <p>{{ modelInstance.description }}</p>
     </div>
 </div>
-<div class="row">
+<div class="row" ng-if="dataIsReady">
     <div class="col col-md-6 col-lg-4">
 
         <div class="mb-3">

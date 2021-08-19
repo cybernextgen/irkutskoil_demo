@@ -4,25 +4,35 @@ from django.utils.module_loading import import_string
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Notification
 from .models import CalculationError
+from django.conf import settings
+import os
 
-try:
-    from uwsgidecorators import spool
-except:
+
+if settings.DEBUG:
     def spool(func):
         def func_wrapper(**arguments):
             return func(arguments)
 
         return func_wrapper
+else:
+    from uwsgidecorators import spool
+
 
 import django
 
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'math_server.settings')
 django.setup()
 logger = logging.getLogger(__name__)
 
 
 @spool
 def async_task_handler(args):
+    """
+    Spooler function
+    :param args: input parameters, must contains cls_path and internal_id parameter, encoded as byte string for UWSGI
+    spooler, and unicode instance for debug mode
+    """
     cls_path = args.get('cls_path')
     model_internal_id = args.get('internal_id')
     cls = import_string(cls_path)

@@ -9,7 +9,6 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from .models import CustomDatetimeJSONEncoder
 from .models import CalculationError
 from .models import AsyncMathModel
 from .models import Notification
@@ -21,6 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 def dict_from_model_class(model_class):
+    """
+    Returns dict of class fields for json serializing
+    :param model_class: BaseMathModel ancestor
+    :return: dict with class fields
+    """
     return {
         'verbose_name': model_class._meta.verbose_name,
         'id': model_class.__name__.lower(),
@@ -30,6 +34,11 @@ def dict_from_model_class(model_class):
 
 
 def dict_from_model_instance(model_instance):
+    """
+    Returns dict of instance fields for json serializing
+    :param model_instance:
+    :return: dict with class and instance fields
+    """
     res = dict_from_model_class(type(model_instance))
     res['input_data'] = model_instance.input_data
     res['output_data'] = model_instance.output_data
@@ -43,7 +52,6 @@ def dict_from_model_instance(model_instance):
 grouped_models_dict = {}
 models_classes_dict = {}
 models_classes_path_dict = {}
-
 for key, classes_list in settings.MATH_MODELS_AVAILABLE.items():
     for class_path in classes_list:
         try:
@@ -61,14 +69,30 @@ for key, classes_list in settings.MATH_MODELS_AVAILABLE.items():
 
 
 class LoginRequiredTemplateView(LoginRequiredMixin, TemplateView):
+    """
+    Base class for views, where login required is needed
+    """
     pass
 
 
 class UnicodeJsonResponse(JsonResponse):
-
+    """
+    JSON-response with non ASCII data
+    """
     def __init__(self, *args, **kwargs):
         super(UnicodeJsonResponse, self).__init__(*args, encoder=DjangoJSONEncoder, safe=False, json_dumps_params={'ensure_ascii': False}, **kwargs)
-        # super(UnicodeJsonResponse, self).__init__(*args, json_dumps_params={'ensure_ascii': False}, **kwargs)
+
+
+def prepare_spooler_args(**kwargs):
+    """
+    Encodes arguments to binary string fo using in uWSGI spooler
+    :param kwargs:arguments to encoding
+    :return: dict with encoded arguments
+    """
+    args = {}
+    for name, value in kwargs.items():
+        args[name.encode('utf-8')] = str(value).encode('utf-8')
+    return args
 
 
 class MathModelAPIView(LoginRequiredMixin, View):
@@ -101,7 +125,11 @@ class MathModelAPIView(LoginRequiredMixin, View):
 
         if isinstance(model_instance, AsyncMathModel):
             model_instance.save()
-            async_task_handler(cls_path=models_classes_path_dict.get(requested_model_external_id), internal_id=model_instance.pk)
+
+            if settings.DEBUG:
+                async_task_handler(cls_path=models_classes_path_dict.get(requested_model_external_id), internal_id=model_instance.pk)
+            else:
+                async_task_handler(prepare_spooler_args(cls_path=models_classes_path_dict.get(requested_model_external_id), internal_id=model_instance.pk))
             return HttpResponse()
         else:
             try:
@@ -143,4 +171,11 @@ class NotificationAPIView(LoginRequiredMixin, View):
                 })
             return UnicodeJsonResponse(res)
         else:
-            pass
+            return HttpResponse()
+
+    def put(self, request):
+        request_data = json.loads(request.body.decode("utf-8"))
+        if not request_data:
+            return UnicodeJsonResponse({'bad_request_reason': 'Список уведомлений для квитирования пуст'}, status=400)
+        Notification.objects.filter(pk__in=request_data).filter(user=request.user).update(is_acknowledged=True)
+        return HttpResponse()

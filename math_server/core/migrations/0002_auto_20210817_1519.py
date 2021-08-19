@@ -2,6 +2,7 @@
 
 import core.models
 from django.db import migrations, models
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 class Migration(migrations.Migration):
@@ -19,31 +20,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='asynccalculatormodel',
             name='input_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
         migrations.AlterField(
             model_name='asynccalculatormodel',
             name='output_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
         migrations.AlterField(
             model_name='simplecalculatormodel',
             name='input_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
         migrations.AlterField(
             model_name='simplecalculatormodel',
             name='output_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
         migrations.AlterField(
             model_name='wellproductionmodel',
             name='input_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
         migrations.AlterField(
             model_name='wellproductionmodel',
             name='output_data',
-            field=models.JSONField(default=dict, encoder=core.models.CustomDatetimeJSONEncoder),
+            field=models.JSONField(default=dict, encoder=DjangoJSONEncoder),
         ),
     ]

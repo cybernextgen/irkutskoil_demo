@@ -331,6 +331,13 @@
 
         $scope.handlePopover = () => {
           popoverInstance.toggle()
+          if ($scope.isPopoverShown && $scope.notifications.length) {
+            setTimeout(() => {
+              if ($scope.isPopoverShown) {
+                $http.put('/api/notification', $scope.notifications.map((n) => n.id), { headers: { 'Content-Type': 'application/json', charset: 'utf-8' } })
+              }
+            }, 2000)
+          }
         }
 
         $scope.acknowledge = (id) => {
@@ -398,6 +405,7 @@
   })
 
   mathServer.controller('wellproductionmodelController', function ($scope, $http, numberParser, isEmptyObjectChecker, $filter) {
+    $scope.dataIsReady = false
     $http.get('/api/math_model/wellproductionmodel').then(response => {
       $scope.modelInstance = response.data
       if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
@@ -409,6 +417,8 @@
           referent_models: []
         }
       }
+    }).finally(() => {
+      $scope.dataIsReady = true
     })
 
     $scope.isProcessing = false
@@ -496,19 +506,21 @@
   })
 
   mathServer.controller('simplecalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
-    $http.get('/api/math_model/simplecalculatormodel').then(response => {
-      $scope.operationsAvailable = [
-        { id: 'add', label: 'Сложение' },
-        { id: 'sub', label: 'Вычитание' },
-        { id: 'mul', label: 'Умножение' },
-        { id: 'div', label: 'Деление' }
-      ]
-      $scope.validationErrors = {}
+    $scope.dataIsReady = false
+    $scope.operationsAvailable = [
+      { id: 'add', label: 'Сложение' },
+      { id: 'sub', label: 'Вычитание' },
+      { id: 'mul', label: 'Умножение' },
+      { id: 'div', label: 'Деление' }
+    ]
+    $scope.validationErrors = {}
 
-      const operationsMap = {}
-      $scope.operationsAvailable.forEach((operationObject) => {
-        operationsMap[operationObject.id] = operationObject
-      })
+    const operationsMap = {}
+    $scope.operationsAvailable.forEach((operationObject) => {
+      operationsMap[operationObject.id] = operationObject
+    })
+
+    $http.get('/api/math_model/simplecalculatormodel').then(response => {
 
       $scope.modelInstance = response.data
 
@@ -521,6 +533,8 @@
       } else {
         $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
       }
+    }).finally(() => {
+      $scope.dataIsReady = true
     })
 
     $scope.validateInput = () => {
@@ -561,6 +575,7 @@
   })
 
   mathServer.controller('asynccalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
+    $scope.dataIsReady = false
     $scope.operationsAvailable = [
       { id: 'add', label: 'Сложение' },
       { id: 'sub', label: 'Вычитание' },
@@ -587,6 +602,8 @@
         } else {
           $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
         }
+      }).finally(() => {
+        $scope.dataIsReady = true
       })
     }
 

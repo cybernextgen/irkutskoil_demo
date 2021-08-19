@@ -1,32 +1,17 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from pathlib import Path
-from datetime import datetime
-from datetime import date
 from dateutil.relativedelta import relativedelta
 from bisect import bisect_left
 from decimal import Decimal
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 import dateutil.parser
 import time
 
 
-class CustomDatetimeJSONEncoder(DjangoJSONEncoder):
-    """
-    Same as DjangoJSONEncoder, but datetime serialized using settings.CUSTOM_DATETIME_FORMAT format string
-    """
-    def default(self, o):
-        if isinstance(o, datetime):
-            r = o.strftime(settings.CUSTOM_DATETIME_FORMAT)
-            return r
-        elif isinstance(o, date):
-            return o.strftime(settings.CUSTOM_DATETIME_FORMAT)
-
-        return DjangoJSONEncoder.default(self, o)
-
-
 class CalculationError(RuntimeError):
+    """
+    Trows from calculate() method of BaseMathModel
+    """
     pass
 
 
@@ -80,7 +65,7 @@ def take_closest_index(src_list, number):
         return pos - 1
 
     after = src_list[pos]
-    # if after - number < number - before:
+
     if after > number:
         return pos - 1
     else:
@@ -114,12 +99,10 @@ class WellProductionModel(BaseMathModel):
             raise CalculationError('Не указана величина геологических запасов')
         total = Decimal(total)
 
-        datetime_format = settings.CUSTOM_DATETIME_FORMAT
         production_table = []
         current_sum = 0
         niz = total * kin
         niz_search_column = [Decimal(row[1]) for row in niz_table]
-        current_debit = 0
 
         for index, niz_row in enumerate(niz_table):
             current_date = dateutil.parser.isoparse(niz_row[0])
@@ -158,6 +141,9 @@ class WellProductionModel(BaseMathModel):
 
 
 class Calculator(object):
+    """
+    Basic calculator class for using in both sync and async math models
+    """
     @staticmethod
     def get_operations():
         return {
@@ -240,7 +226,7 @@ class AsyncCalculatorModel(AsyncMathModel):
 
 class Notification(models.Model):
     """
-    Notification for user about calculation was done
+    Notification for user about calculation was done or failed
     """
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
