@@ -62,7 +62,7 @@
 
   mathServer.filter('roundTo', function (numberFilter) {
     return (value, maxDecimals) => {
-      return value.toFixed(maxDecimals).replace(/(?:\.0+|(\.\d+?)0+)$/, "$1")
+      return value.toFixed(maxDecimals).replace(/(?:\.0+|(\.\d+?)0+)$/, '$1')
     }
   })
 
@@ -70,7 +70,6 @@
     return text => {
       if (!text) throw new ValidationError('Дата не указана')
       const splittedDateString = text.split('.')
-      console.log(splittedDateString)
       const date = new Date(`${splittedDateString[2]}-${splittedDateString[1]}-${splittedDateString[0]}`)
       if (isNaN(date)) throw new ValidationError(`Неверный формат даты: ${text}. Укажите дату в формате ДД.ММ,ГГГГ`)
       return date
@@ -143,6 +142,8 @@
             }, (rejection) => {
               $scope.validationError = `Ошибка парсинга! ${rejection.message}`
             })
+          }, () => {
+            $scope.validationError = 'Ограничен доступ к буферу обмена. Измените настройки браузера для продолжения работы.'
           })
         }
 
@@ -213,6 +214,8 @@
             }, (rejection) => {
               $scope.validationError = `Ошибка парсинга! ${rejection.message}`
             })
+          }, () => {
+            $scope.validationError = 'Ограничен доступ к буферу обмена. Измените настройки браузера для продолжения работы.'
           })
         }
 
@@ -320,13 +323,18 @@
         const popoverTrigger = document.getElementById('notification_popover')
         let popoverInstance = new bootstrap.Popover(popoverTrigger, popoverConfig)
         $scope.generatePopoverHTML = () => {
-          $scope.popoverHTML = '<h5>Последние уведомления</h5><ul class="list-group">'
-          $scope.notifications.forEach((notification) => {
-            const timestamp = $filter('date')(notification.created_timestamp, 'dd.MM.yy HH:mm')
-            const statusClass = notification.is_success ? 'list-group-item-success' : 'list-group-item-danger'
-            $scope.popoverHTML += `<li class="list-group-item ${statusClass}"><h6>${timestamp}</h6> ${notification.description}</li>`
-          })
-          $scope.popoverHTML += '</ul>'
+          $scope.popoverHTML = '<h5>Последние уведомления</h5>'
+          if ($scope.notifications.length) {
+            $scope.popoverHTML += '<ul class="list-group">'
+            $scope.notifications.forEach((notification) => {
+              const timestamp = $filter('date')(notification.created_timestamp, 'dd.MM.yy HH:mm')
+              const statusClass = notification.is_success ? 'list-group-item-success' : 'list-group-item-danger'
+              $scope.popoverHTML += `<li class="list-group-item ${statusClass}"><h6>${timestamp}</h6> ${notification.description}</li>`
+            })
+            $scope.popoverHTML += '</ul>'
+          } else {
+            $scope.popoverHTML += '<p class="text-muted">У Вас нет уведомлений</p>'
+          }
         }
 
         $scope.handlePopover = () => {
@@ -338,10 +346,6 @@
               }
             }, 2000)
           }
-        }
-
-        $scope.acknowledge = (id) => {
-          console.log('ack')
         }
 
         $scope.updatePopover = () => {
@@ -363,7 +367,7 @@
             $scope.notifications = response.data
             $scope.generatePopoverHTML()
             $scope.updatePopover()
-          })
+          }, () => {})
         }
         setInterval(() => { $scope.loadNotifications() }, 10000)
 
