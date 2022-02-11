@@ -1,5 +1,6 @@
 import logging
 import json
+from typing import Dict
 from django.http import HttpResponseForbidden, JsonResponse
 from django.http import HttpResponseNotFound
 from django.http import HttpResponse
@@ -9,7 +10,7 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from .models import CalculationError
+from .models import CalculationError, Employee, Individual
 from .models import AsyncMathModel
 from .models import Notification
 from .models import NSIDataImportStatus
@@ -21,7 +22,7 @@ from .nsi_data_import import ImportNSIDataError
 logger = logging.getLogger(__name__)
 
 
-def dict_from_model_class(model_class):
+def dict_from_model_class(model_class) -> Dict:
     """
     Returns dict of class fields for json serializing
     :param model_class: BaseMathModel ancestor
@@ -35,7 +36,7 @@ def dict_from_model_class(model_class):
     }
 
 
-def dict_from_model_instance(model_instance):
+def dict_from_model_instance(model_instance) -> Dict:
     """
     Returns dict of instance fields for json serializing
     :param model_instance:
@@ -245,10 +246,40 @@ class NSIDataImportAPIView(LoginRequiredMixin, View):
                                         'user': status.user.get_full_name()}, status=202)
 
 
+def dict_from_individual_instance(individual: Individual) -> Dict:
+    if individual:
+        return {"nsi_id": individual.nsi_id,
+                "name": individual.name,
+                "surname": individual.surname,
+                "patronymic": individual.patronymic,
+                "birth_date": individual.birth_date,
+                "inn": individual.inn,
+                "snils": individual.snils,
+                "code": individual.code
+                }
+    else:
+        return {}
+
+
+def dict_from_employee_instance(employee: Employee) -> Dict:
+    return {"nsi_id": employee.nsi_id,
+            "individual": dict_from_individual_instance(employee.individual),
+            "employee_number": employee.employee_number,
+            "full_name": employee.full_name,
+            "employment_date": employee.employment_date,
+            "dismissal_date": employee.dismissal_date,
+            "code": employee.code,
+            "is_primary_workplace": employee.is_primary_workplace
+            }
+
+
 class NSIAPIView(LoginRequiredMixin, View):
     """
     REST-API for NSI objects
     """
 
-    def put(self, request, **kwargs):
-        print('worked')
+    def get(self, request, **kwargs):
+        limit = int(kwargs.get('limit', 0))
+        employees_qs = Employee.objects.filter(is_deleted=False).order_by('employee_number')[:limit]
+        result = [dict_from_employee_instance(e) for e in employees_qs]
+        return UnicodeJsonResponse(result)

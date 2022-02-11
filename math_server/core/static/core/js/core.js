@@ -744,6 +744,7 @@
 
   mathServer.controller('nsiController', function ($scope, $http, $filter) {
     $scope.importIsPending = false
+    $scope.employeeToShow = {}
 
     $scope.importData = () => {
       $http.put('/api/nsi_data_import', {}, {
@@ -753,6 +754,7 @@
         }
       }).finally(() => {
         $scope.importIsPending = false
+        $scope.loadEmployees()
       })
       $scope.importIsPending = true
     }
@@ -768,7 +770,31 @@
       })
     }
 
-    $scope.getImportStatus()
+    $scope.loadEmployees = () => {
+      $http.get('/api/nsi_data/10').then((response) => {
+        $scope.employees = response.data
+        console.log($scope.employees)
+      })
+    }
 
+    let modalInstance
+
+    $scope.showEmployee = (employee) => {
+      $scope.employeeToShow = employee
+      modalInstance = new bootstrap.Modal(document.getElementById(`modal_${$scope.$id}`), {})
+      modalInstance.show()
+    }
+
+    $scope.closeModal = () => {
+      modalInstance.hide()
+    }
+
+    $scope.save = () => {
+      $scope.table = $scope.niz_table_temp
+      modalInstance.hide()
+    }
+
+    $scope.getImportStatus()
+    $scope.loadEmployees()
   })
 })(angular, bootstrap)
