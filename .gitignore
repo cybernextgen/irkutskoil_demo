@@ -62,3 +62,4 @@ math_server/math_server/local_settings.py
 math_server/static
 math_server/node_modules
 math_server/package-lock.json
+math_server/exported_data

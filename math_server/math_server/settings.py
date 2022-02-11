@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from .ldap_settings import *
 
 try:
     from .local_settings import *
@@ -89,7 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'Asia/Irkutsk'
 
@@ -124,6 +125,7 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# AUTH_LDAP_USER_DN_TEMPLATE = '%(user)s'
 
 LOGGING = {
     'version': 1,
@@ -140,14 +142,12 @@ LOGGING = {
 }
 
 MATH_MODELS_AVAILABLE = {
-    'Модели для скважин': [
-        'core.models.WellProductionModel',
+    'Простые модели': [
         'core.models.SimpleCalculatorModel',
         'core.models.AsyncCalculatorModel'
     ],
-    'Прочие модели': [
-        'core.models.SimpleCalculatorModel',
-        'core.models.AsyncCalculatorModel'
+    'Дополнительные модели': [
+        'core.models.WellProductionModel',
     ]
 }
 
@@ -155,3 +155,7 @@ LOGIN_URL = 'login/'
 LOGOUT_URL = 'logout/'
 LOGOUT_REDIRECT_URL = '/'
 CUSTOM_DATETIME_FORMAT = '%d.%m.%Y'
+
+NSI_EXPORTED_DATA_DIR = BASE_DIR / 'exported_data'
+NSI_EXPORTED_DATA_FILE_PATH = NSI_EXPORTED_DATA_DIR / 'Message_000_008.xml'
+NSI_ACK_FILE_PATH = NSI_EXPORTED_DATA_DIR / 'Message_008_000.xml'

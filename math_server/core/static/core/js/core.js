@@ -1,6 +1,6 @@
 /* global bootstrap, angular, Chart */
 (function (angular, bootstrap) {
-  class ValidationError extends Error {}
+  class ValidationError extends Error { }
 
   const mathServer = angular.module('mathServer', ['ui.router', 'ngclipboard'])
 
@@ -33,8 +33,56 @@
         url: '/models/asynccalculatormodel',
         templateUrl: 'templates/asynccalculatormodel.html',
         controller: 'asynccalculatormodelController'
+      }).state('vnswellmodel', {
+        url: '/models/vnswellmodel',
+        templateUrl: 'templates/vnswellmodel.html',
+        controller: 'vnswellmodelController'
+      }).state('nsi', {
+        url: '/nsi',
+        templateUrl: 'templates/nsi.html',
+        controller: 'nsiController'
       })
     }])
+
+  mathServer.factory('userPermissionsStorage', function ($http, isEmptyObjectChecker) {
+    let userPermissions = {};
+    const permissionPromise = new Promise((resolve, reject) => {
+      if (isEmptyObjectChecker(userPermissions)) {
+        $http.get('/api/permissions').then(response => {
+          for (const perm of response.data) {
+            userPermissions[perm] = true
+          }
+          resolve(userPermissions)
+        }, rejectionReason => {
+          reject(rejectionReason)
+        });
+      } else {
+        resolve(userPermissions)
+      }
+    })
+
+    return {
+      getPermissions: () => {
+        return permissionPromise;
+      }
+    };
+  });
+
+  mathServer.directive('userHasPermission', ['userPermissionsStorage', function (userPermissionsStorage) {
+
+    function link(scope, element, attrs) {
+      const requestedPermission = attrs['userHasPermission']
+      userPermissionsStorage.getPermissions().then(permissionsObject => {
+        if (!permissionsObject[requestedPermission]) {
+          element.addClass('d-none')
+        }
+      })
+    }
+
+    return {
+      link: link
+    };
+  }]);
 
   mathServer.factory('excelClipboardParser', function () {
     return text => {
@@ -367,7 +415,7 @@
             $scope.notifications = response.data
             $scope.generatePopoverHTML()
             $scope.updatePopover()
-          }, () => {})
+          }, () => { })
         }
         setInterval(() => { $scope.loadNotifications() }, 10000)
 
@@ -377,7 +425,7 @@
     }
   })
 
-  mathServer.controller('modelsController', function ($scope, $http, $filter) {
+  mathServer.controller('modelsController', function ($scope, $http, $filter, userPermissionsStorage) {
     $scope.grouped_models = {}
     $scope.filtred_models = {}
     $scope.search = ''
@@ -396,9 +444,24 @@
 
     $scope.loadModels = () => {
       $http.get('/api/math_model').then(response => {
-        $scope.grouped_models = response.data
-        $scope.filtred_models = $scope.grouped_models
-      }, rejection => {})
+        userPermissionsStorage.getPermissions().then(permissionsObject => {
+          let allowedGroups = {}
+          angular.forEach(response.data, (group, groupName) => {
+            let allowedModels = []
+            angular.forEach(group, model => {
+              if (permissionsObject[`core.view_${model.id}`]) {
+                allowedModels.push(model)
+              }
+            })
+            if (allowedModels.length > 0) {
+              allowedGroups[groupName] = allowedModels
+            }
+          })
+          $scope.grouped_models = allowedGroups
+          $scope.filtred_models = $scope.grouped_models
+          $scope.$apply()
+        })
+      }, rejection => { })
     }
 
     $scope.isEmptyObject = (obj) => {
@@ -410,6 +473,9 @@
 
   mathServer.controller('wellproductionmodelController', function ($scope, $http, numberParser, isEmptyObjectChecker, $filter) {
     $scope.dataIsReady = false
+
+    $scope.modelIsAvailable = false
+
     $http.get('/api/math_model/wellproductionmodel').then(response => {
       $scope.modelInstance = response.data
       if (isEmptyObjectChecker($scope.modelInstance.input_data)) {
@@ -421,6 +487,11 @@
           referent_models: []
         }
       }
+    }).then(successResponse => {
+      $scope.modelIsAvailable = true
+    }, errorResponse => {
+      $scope.modelIsAvailable = false
+      $scope.errorText = `Ошибка ${errorResponse.status}: ${errorResponse.data || errorResponse.statusText}`
     }).finally(() => {
       $scope.dataIsReady = true
     })
@@ -493,8 +564,8 @@
           }, rejection => {
             if (rejection.status === 400) $scope.validationErrors.bad_request_reason = rejection.data.bad_request_reason
           }).finally(() => {
-          $scope.isProcessing = false
-        })
+            $scope.isProcessing = false
+          })
       }
     }
 
@@ -511,6 +582,9 @@
 
   mathServer.controller('simplecalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
     $scope.dataIsReady = false
+
+    $scope.modelIsAvailable = false
+
     $scope.operationsAvailable = [
       { id: 'add', label: 'Сложение' },
       { id: 'sub', label: 'Вычитание' },
@@ -537,6 +611,11 @@
       } else {
         $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
       }
+    }).then(successResponse => {
+      $scope.modelIsAvailable = true
+    }, errorResponse => {
+      $scope.modelIsAvailable = false
+      $scope.errorText = `Ошибка ${errorResponse.status}: ${errorResponse.data || errorResponse.statusText}`
     }).finally(() => {
       $scope.dataIsReady = true
     })
@@ -572,14 +651,18 @@
           }, rejection => {
             if (rejection.status === 400) $scope.validationErrors.bad_request_reason = rejection.data.bad_request_reason
           }).finally(() => {
-          $scope.isProcessing = false
-        })
+            $scope.isProcessing = false
+          })
       }
     }
   })
 
   mathServer.controller('asynccalculatormodelController', function ($scope, $http, numberParser, isEmptyObjectChecker) {
     $scope.dataIsReady = false
+
+    $scope.modelIsAvailable = false
+
+
     $scope.operationsAvailable = [
       { id: 'add', label: 'Сложение' },
       { id: 'sub', label: 'Вычитание' },
@@ -606,6 +689,11 @@
         } else {
           $scope.modelInstance.input_data.op = operationsMap[$scope.modelInstance.input_data.op] || $scope.operationsAvailable[0]
         }
+      }).then(successResponse => {
+        $scope.modelIsAvailable = true
+      }, errorResponse => {
+        $scope.modelIsAvailable = false
+        $scope.errorText = `Ошибка ${errorResponse.status}: ${errorResponse.data || errorResponse.statusText}`
       }).finally(() => {
         $scope.dataIsReady = true
       })
@@ -613,7 +701,7 @@
 
     $scope.validateInput = () => {
       $scope.validationErrors = {}
-      const numberFields = [ 'val2']
+      const numberFields = ['val2']
       numberFields.forEach((fieldName) => {
         try {
           numberParser($scope.modelInstance.input_data[fieldName])
@@ -651,7 +739,36 @@
         })
       }
     }
-
     $scope.loadModel()
+  })
+
+  mathServer.controller('nsiController', function ($scope, $http, $filter) {
+    $scope.importIsPending = false
+
+    $scope.importData = () => {
+      $http.put('/api/nsi_data_import', {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          charset: 'utf-8'
+        }
+      }).finally(() => {
+        $scope.importIsPending = false
+      })
+      $scope.importIsPending = true
+    }
+
+    $scope.getImportStatus = () => {
+      $http.get('/api/nsi_data_import').then((response) => {
+        if (response.status == 202) {
+          $scope.importIsPending = true
+          const importStatus = response.data
+          const timestamp = $filter('date')(importStatus.created_timestamp, 'dd.MM.yy в HH:mm')
+          $scope.pendingMessage = `Пользователь ${importStatus.user} инициировал импорт данных ${timestamp}`
+        }
+      })
+    }
+
+    $scope.getImportStatus()
+
   })
 })(angular, bootstrap)

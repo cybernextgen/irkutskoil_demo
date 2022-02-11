@@ -15,7 +15,7 @@ if settings.DEBUG:
 
         return func_wrapper
 else:
-    from uwsgidecorators import spool
+    from uwsgidecorators import spool  # type: ignore
 
 
 import django

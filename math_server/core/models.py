@@ -76,6 +76,7 @@ class WellProductionModel(BaseMathModel):
     """
     Model predicts oil production
     """
+
     def calculate(self):
         if not self.input_data:
             raise CalculationError('Отсутствуют входные данные для алгоритма')
@@ -140,6 +141,24 @@ class WellProductionModel(BaseMathModel):
         verbose_name = 'Прогнозирование добычи'
 
 
+class VNSWellModel(BaseMathModel):
+
+    def calculate(self):
+        self.output_data = {'test': 'test'}
+        return self.output_data
+
+    @staticmethod
+    def get_icon_path():
+        return 'core/img/well2.png'
+
+    @staticmethod
+    def get_description():
+        return 'Модель позволяет рассчитать профиль скважины ВНС с учетом ГТМ.'
+
+    class Meta:
+        verbose_name = 'Расчет профиля скважины ВНС'
+
+
 class Calculator(object):
     """
     Basic calculator class for using in both sync and async math models
@@ -178,6 +197,7 @@ class SimpleCalculatorModel(BaseMathModel):
     """
     Model predicts oil production
     """
+
     def calculate(self):
         self.output_data['result'] = Calculator.calculate(self.input_data)
         return self.output_data
@@ -230,7 +250,7 @@ class Notification(models.Model):
     """
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
-    math_model_id = models.CharField(max_length=50)
+    math_model_id = models.CharField(max_length=50, null=True)
 
     created_timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -243,3 +263,79 @@ class Notification(models.Model):
     class Meta:
         verbose_name = 'Уведомление'
         verbose_name_plural = 'Уведомления'
+
+
+class NSIDataImportStatus(models.Model):
+    """
+    Состояние импорта данных из НСИ, необходимо для реализации пессимистичной блокировки
+    """
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    created_timestamp = models.DateTimeField(auto_now_add=True)
+
+    is_pending = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Статус импорта данных из НСИ'
+        verbose_name_plural = 'Статусы импорта данных из НСИ'
+
+
+class Individual(models.Model):
+    """
+    Физическое лицо, экспортированное из 1С НСИ
+    """
+    nsi_id = models.CharField(max_length=255, verbose_name='Идентификатор в НСИ', primary_key=True)
+
+    is_deleted = models.BooleanField(verbose_name='Пометка удаления', default=False)
+
+    name = models.CharField(max_length=100, verbose_name='Имя', blank=True, null=True)
+
+    surname = models.CharField(max_length=100, verbose_name='Фамилия', blank=True, null=True)
+
+    patronymic = models.CharField(max_length=100, verbose_name='Отчество',  blank=True, null=True)
+
+    birth_date = models.DateField(verbose_name='Дата рождения')
+
+    inn = models.CharField(verbose_name='ИНН', blank=True, null=True, max_length=50)
+
+    snils = models.CharField(verbose_name='СНИЛС', blank=True, null=True, max_length=50)
+
+    code = models.CharField(verbose_name='Код', blank=True, null=True, max_length=100)
+
+    def __str__(self) -> str:
+        return f'{self.name} {self.surname} {self.patronymic}'
+
+    class Meta:
+        verbose_name = 'Физическое лицо'
+        verbose_name_plural = 'Физические лица'
+
+
+class Employee(models.Model):
+    """
+    Сотрудник, экспортированный из 1С НСИ
+    """
+    nsi_id = models.CharField(max_length=255, verbose_name='Идентификатор в НСИ', primary_key=True)
+
+    is_deleted = models.BooleanField(verbose_name='Пометка удаления', default=False)
+
+    individual = models.ForeignKey(Individual, on_delete=models.CASCADE,
+                                   verbose_name='Физическое лицо', blank=True, null=True,)
+
+    employee_number = models.CharField(max_length=100, verbose_name='Табельный номер', blank=True, null=True,)
+
+    full_name = models.CharField(max_length=255, verbose_name='Наименование', blank=True, null=True,)
+
+    employment_date = models.DateField(verbose_name='Дата приема на работу')
+
+    dismissal_date = models.DateField(verbose_name='Дата увольнения', blank=True)
+
+    code = models.CharField(max_length=100, verbose_name='Код', blank=True, null=True,)
+
+    is_primary_workplace = models.BooleanField(verbose_name='Основное место работы', default=True)
+
+    def __str__(self) -> str:
+        return f'{self.employee_number} {self.full_name}'
+
+    class Meta:
+        verbose_name = 'Сотрудник'
+        verbose_name_plural = 'Сотрудники'
