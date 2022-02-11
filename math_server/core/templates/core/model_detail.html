@@ -1,0 +1,23 @@
+{% verbatim %}
+<div class="spinner-border text-secondary mt-3" role="status" ng-if="!dataIsReady">
+    <span class="visually-hidden">Загрузка...</span>
+</div>
+
+<div class="row" ng-if="dataIsReady && !modelIsAvailable">
+    <div class="col mt-3">
+        {{ errorText }}
+    </div>
+</div>
+
+<div class="row" ng-if="dataIsReady && modelIsAvailable">
+    <div class="col mt-3">
+        <h3>{{ modelInstance.verbose_name }}</h3>
+        <p>{{ modelInstance.description }}</p>
+    </div>
+</div>
+{% endverbatim %}
+
+<div class="row" ng-if="dataIsReady && modelIsAvailable">
+    {% block 'model_content' %}
+    {% endblock %}
+</div>

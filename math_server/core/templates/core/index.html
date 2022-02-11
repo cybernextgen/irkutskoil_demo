@@ -8,17 +8,44 @@
 {% block 'content' %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#"><img src="{% static 'core/img/logo.png' %}" height="30"> Сервер <span class="d-none d-sm-inline">математических</span> <span class="d-inline d-sm-none">мат.</span> моделей</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <a class="navbar-brand" href="#"><img src="{% static 'core/img/logo.png' %}" height="30"> Сервер <span
+                class="d-none d-sm-inline">математических</span> <span class="d-inline d-sm-none">мат.</span>
+            моделей</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" ui-sref="models" ui-sref-active="active">Модели</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-cloak user-has-permission="core.view_employee" ui-sref="nsi"
+                        ui-sref-active="active">НСИ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin" ng-cloak
+                        user-has-permission="auth.view_user">Администрирование</a>
+                </li>
+            </ul>
+        </div>
         <div class="collapse navbar-collapse text-end" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
             <div class="d-flex">
                 <div class="me-2">
                     <notification-viewer></notification-viewer>
                 </div>
-                <a class="btn btn-outline-secondary form-control" href="{% url 'logout' %}">Выйти</a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton1"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ user.get_full_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item" href="{% url 'logout' %}">Выйти</a></li>
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>
@@ -30,13 +57,14 @@
 {% compress js %}
 <script type="text/javascript" src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}" charset="utf-8"></script>
 <script type="text/javascript" src="{% static 'angular/angular.min.js' %}" charset="utf-8"></script>
-<script type="text/javascript" src="{% static '@uirouter/angularjs/release/angular-ui-router.min.js' %}" charset="utf-8"></script>
+<script type="text/javascript" src="{% static '@uirouter/angularjs/release/angular-ui-router.min.js' %}"
+    charset="utf-8"></script>
 <script type="text/javascript" src="{% static 'clipboard/dist/clipboard.min.js' %}" charset="utf-8"></script>
 <script type="text/javascript" src="{% static 'ngclipboard/dist/ngclipboard.min.js' %}" charset="utf-8"></script>
 <script type="text/javascript" src="{% static 'chart.js/dist/chart.min.js' %}" charset="utf-8"></script>
 <script type="text/javascript" src="{% static 'core/js/core.js' %}" charset="utf-8"></script>
 {% endcompress %}
 <script>
-  window.csrf_token = "{{ csrf_token }}";
+    window.csrf_token = "{{ csrf_token }}";
 </script>
 {% endblock %}

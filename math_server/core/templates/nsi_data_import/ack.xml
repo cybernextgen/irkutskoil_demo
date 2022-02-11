@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ПереченьЗаписей xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://replication-messages.org">
+<Запись xmlns:q1="http://Receipt.org" xsi:type="q1:ПереченьКвитанций">{% for record in ack_records %}
+<q1:Запись><q1:ИдентификаторВБазе>{{record.nsi_id}}</q1:ИдентификаторВБазе></q1:Запись>{% endfor %}
+</Запись>
+</ПереченьЗаписей>

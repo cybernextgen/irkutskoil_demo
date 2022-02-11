@@ -7,7 +7,7 @@
         </div>
     </div>
 </div>
-<div class="row" ng-if="isEmptyObject(filtred_models) && ">
+<div class="row" ng-if="isEmptyObject(filtred_models)">
     <div class="col mt-3">
         <p class="text-muted">Модели отсутствуют</p>
     </div>
@@ -23,14 +23,16 @@
             <div class="card mb-3 bg-light">
                 <div class="row g-0">
                     <div class="col-4 p-3">
-                        <img ng-src="{{ STATIC_URL }}{% verbatim %}{{model.icon_path}}{% endverbatim %}" class="img-fluid rounded-start" alt="...">
+                        <img ng-src="{{ STATIC_URL }}{% verbatim %}{{model.icon_path}}{% endverbatim %}"
+                            class="img-fluid rounded-start" alt="...">
                     </div>
                     <div class="col-8">
                         <div class="card-body">
                             <h5 class="card-title">{% verbatim %}{{ model.verbose_name }}{% endverbatim %}</h5>
                             <p class="card-text">{% verbatim %}{{ model.description }}{% endverbatim %}</p>
                             <div class="d-grid">
-                                <button class="btn btn-outline-secondary" type="button" ui-sref="{% verbatim %}{{ model.id }}{% endverbatim %}">Перейти</button>
+                                <button class="btn btn-outline-secondary" type="button"
+                                    ui-sref="{% verbatim %}{{ model.id }}{% endverbatim %}">Перейти</button>
                             </div>
                         </div>
                     </div>

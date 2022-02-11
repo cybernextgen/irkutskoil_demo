@@ -1,0 +1,104 @@
+{% load static %}
+{% verbatim %}
+<div class="spinner-border text-secondary mt-3" role="status" ng-if="!dataIsReady">
+    <span class="visually-hidden">Загрузка...</span>
+</div>
+
+<div class="row" ng-if="dataIsReady">
+    <div class="col mt-3">
+        <h3>{{ modelInstance.verbose_name }}</h3>
+        <p>{{ modelInstance.description }}</p>
+    </div>
+</div>
+<div class="row" ng-if="dataIsReady">
+    <div class="col-12>
+        <h4>Исходные данные</h4>
+
+        <div class=" mb-3">
+        <label for="id_niz" class="form-label">Величина НИЗ, тыс.т.</label>
+        <input type="number" required class="form-control" id="id_niz" ng-model="modelInstance.input_data.niz"
+            ng-class="{'is-invalid': validationErrors.niz}" lang="ru">
+        <div class="invalid-feedback" ng-if="validationErrors.niz">
+            {{validationErrors.niz}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="id_total" class="form-label">Дата ввода скважины в эксплуатацию</label>
+        <input type="text" required class="form-control" id="id_date_begin"
+            ng-model="modelInstance.input_data.date_begin" ng-class="{'is-invalid': validationErrors.date_begin}"
+            lang="ru">
+        <div class="invalid-feedback" ng-if="validationErrors.date_begin">
+            {{validationErrors.date_begin}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="id_start_liquid_debit" class="form-label">Стартовый дебит жидкости, м<sup>3</sup></label>
+        <input type="number" step="any" required class="form-control" id="id_start_liquid_debit"
+            ng-model="modelInstance.input_data.start_liquid_debit"
+            ng-class="{'is-invalid': validationErrors.start_liquid_debit}" lang="ru">
+        <div class="invalid-feedback" ng-if="validationErrors.start_liquid_debit">
+            {{validationErrors.start_liquid_debit}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="id_start_oil_debit" class="form-label">Стартовый дебит нефти, т.</label>
+        <input type="number" required class="form-control" id="id_start_oil_debit"
+            ng-model="modelInstance.input_data.start_oil_debit"
+            ng-class="{'is-invalid': validationErrors.start_oil_debit}" lang="ru">
+        <div class="invalid-feedback" ng-if="validationErrors.start_oil_debit">
+            {{validationErrors.start_oil_debit}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="id_oil_density" class="form-label">Плотность нефти для данного участка недр,
+            т/м<sup>3</sup></label>
+        <input type="number" min="0.7" max="0.9" required class="form-control" id="id_oil_density"
+            ng-model="modelInstance.input_data.oil_density" ng-class="{'is-invalid': validationErrors.oil_density}"
+            lang="ru">
+        <div class="invalid-feedback" ng-if="validationErrors.oil_density">
+            {{validationErrors.date_begin}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Таблица "Отбор от НИЗ / Обводнённость"
+            <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                title="Введите таблицу из двух столбцов: Отбор от НИЗ, Обводнённость. Нажмите кнопку редактирования для ввода значений"></i></label>
+        <niz-table-editor table="modelInstance.input_data.niz_table" is-invalid="validationErrors.niz_table"
+            ng-class="{'is-invalid': validationErrors.niz_table}"></niz-table-editor>
+        <div class="invalid-feedback" ng-if="validationErrors.niz_table">
+            {{validationErrors.niz_table}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="id_gaz_table" class="form-label">Таблица "Отбор от НИЗ / Газовый фактор"
+            <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                title="Введите таблицу из двух столбцов: Отбор от НИЗ, Газовый фактор. Нажмите кнопку редактирования для ввода значений"></i></label>
+        <niz-table-editor table="modelInstance.input_data.gaz_table" is-invalid="validationErrors.gaz_table"
+            ng-class="{'is-invalid': validationErrors.gaz_table}"></niz-table-editor>
+        <div class="invalid-feedback" ng-if="validationErrors.gaz_table">
+            {{validationErrors.gaz_table}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Таблица темпа падения дебита жидкости"
+            <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                title="Введите таблицу из двух столбцов: номер месяца, множитель. Нажмите кнопку редактирования для ввода значений"></i></label>
+        <niz-table-editor table="modelInstance.input_data.debit_table" is-invalid="validationErrors.debit_table"
+            ng-class="{'is-invalid': validationErrors.debit_table}"></niz-table-editor>
+        <div class="invalid-feedback" ng-if="validationErrors.debit_table">
+            {{validationErrors.debit_table}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Таблица коэффициента эксплуатации"
+            <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="right"
+                title="Введите таблицу из двух столбцов: номер месяца, коэффициент эксплуатации. Нажмите кнопку редактирования для ввода значений"></i></label>
+        <niz-table-editor table="modelInstance.input_data.debit_table" is-invalid="validationErrors.debit_table"
+            ng-class="{'is-invalid': validationErrors.debit_table}"></niz-table-editor>
+        <div class="invalid-feedback" ng-if="validationErrors.debit_table">
+            {{validationErrors.debit_table}}
+        </div>
+    </div>
+</div>
+</div>
+{% endverbatim %}

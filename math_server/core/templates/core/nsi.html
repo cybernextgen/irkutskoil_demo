@@ -1,0 +1,18 @@
+{% verbatim %}
+<div class="row">
+    <div class="col mt-3">
+        <h3>Информация из НСИ</h3>
+        <p>Просмотр и импорт данных из систем НСИ</p>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <button class="btn btn-primary" id="" ng-click="importData()" ng-disabled="importIsPending">
+            <span ng-if="importIsPending"><span class="spinner-border spinner-border-sm" role="status"
+                    aria-hidden="true"></span> Выполняется импорт</span>
+            <span ng-if="!importIsPending">Импортировать данные</span>
+        </button>
+        <div class="form-text" ng-if="importIsPending && pendingMessage">{{pendingMessage}}</div>
+    </div>
+</div>
+{% endverbatim %}
